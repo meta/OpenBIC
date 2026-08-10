@@ -14065,21 +14065,7 @@ static void update_ot_warning_status(void)
 			struct pldm_addsel_data sel_msg = { 0 };
 			sel_msg.assert_type = LOG_ASSERT;
 			sel_msg.event_type = ARKE_FAULT;
-
-			if (ot_warning_table[i].sensor_num ==
-			    SENSOR_NUM_ASIC_P0V75_NUWA0_VDD_TEMP_C) {
-				sel_msg.event_data_1 = 0x7C;
-			} else if (ot_warning_table[i].sensor_num ==
-				   SENSOR_NUM_ASIC_P0V75_NUWA1_VDD_TEMP_C) {
-				sel_msg.event_data_1 = 0x7D;
-			} else if (ot_warning_table[i].sensor_num == SENSOR_NUM_UBC1_P12V_TEMP_C) {
-				sel_msg.event_data_1 = 0x7E;
-			} else if (ot_warning_table[i].sensor_num == SENSOR_NUM_UBC2_P12V_TEMP_C) {
-				sel_msg.event_data_1 = 0x7F;
-			} else {
 				sel_msg.event_data_1 = OT_WARNING_EVENT_DATA1_BASE + i;
-			}
-
 			sel_msg.event_data_2 = reg_val;
 			sel_msg.event_data_3 = 0;
 
