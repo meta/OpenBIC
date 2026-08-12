@@ -26,6 +26,7 @@
 #include "plat_ioexp.h"
 #include "plat_log.h"
 #include "plat_cpld.h"
+#include "plat_gpio.h"
 // #include "shell_plat_average_power.h"
 #include "plat_power_capping.h"
 #include "ina238.h"
@@ -13799,10 +13800,11 @@ bool is_ina238_access(uint8_t sensor_num)
 	if (!polling_access)
 		return false;
 
-	const sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_num);
+	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_num);
 	if (cfg == NULL || cfg->target_addr == 0)
 		return false;
 
+	/* Check I2C address using the no-log read before allowing polling */
 	I2C_MSG msg = {
 		.bus = cfg->port,
 		.target_addr = cfg->target_addr,
@@ -13811,7 +13813,17 @@ bool is_ina238_access(uint8_t sensor_num)
 	};
 	msg.data[0] = INA238_DEVICE_ID_OFFSET;
 
-	return (i2c_master_read_without_error_log(&msg, 0) == 0);
+	if (i2c_master_read_without_error_log(&msg, 0) != 0)
+		return false;
+
+	/* Require PRSNT_INA238_CABLE == 0 in addition to existing polling flags */
+	if (gpio_get(PRSNT_INA238_CABLE) != 0)
+		return false;
+
+	if (!polling_access)
+		return false;
+
+	return true;
 }
 
 bool is_temp_access(uint8_t cfg_idx)
