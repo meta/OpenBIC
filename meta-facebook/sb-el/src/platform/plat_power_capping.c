@@ -17,6 +17,7 @@
 #include <kernel.h>
 #include <logging/log.h>
 #include "raa228249.h"
+#include "raa229140a.h"
 #include "mp29816a.h"
 #include "pldm_sensor.h"
 #include "plat_adc.h"
@@ -111,8 +112,14 @@ void power_capping_syn_vr_oc_warn_limit()
 				LOG_ERR("Can't get IOUT_OC_WARN: 0x%x", sensor_id);
 			}
 		} else if (get_vr_module() == VR_MODULE_RNS) {
-			if (raa228249_get_iout_oc_warn_limit(cfg, &value)) {
-				if (raa228249_get_vout_command(cfg, 0, &voltage_value)) {
+			bool get_iout_ok = (cfg->type == sensor_dev_raa229140a) ?
+					   raa229140a_get_iout_oc_warn_limit(cfg, &value) :
+					   raa228249_get_iout_oc_warn_limit(cfg, &value);
+			if (get_iout_ok) {
+				bool get_vout_ok = (cfg->type == sensor_dev_raa229140a) ?
+						   raa229140a_get_vout_command(cfg, 0, &voltage_value) :
+						   raa228249_get_vout_command(cfg, 0, &voltage_value);
+				if (get_vout_ok) {
 					float_value = voltage_value / 1000.0;
 					power_capping_info.current_threshold[i] = value;
 					power_capping_info.threshold[i][CAPPING_LV_IDX_LV1] =
@@ -197,13 +204,20 @@ bool set_power_capping_vr_oc_warn_limit(uint8_t vr_idx, uint16_t value)
 	} else if (get_vr_module() == VR_MODULE_RNS) {
 		uint16_t voltage_value = 0;
 		float float_value = 0;
-		ret = raa228249_get_vout_command(cfg, 0, &voltage_value);
+		ret = (cfg->type == sensor_dev_raa229140a) ?
+			      raa229140a_get_vout_command(cfg, 0, &voltage_value) :
+			      raa228249_get_vout_command(cfg, 0, &voltage_value);
 		if (ret) {
 			float_value = voltage_value / 1000.0;
 			uint16_t current_val = value / float_value;
-			ret = raa228249_set_iout_oc_warn_limit(cfg, current_val);
+			ret = (cfg->type == sensor_dev_raa229140a) ?
+				      raa229140a_set_iout_oc_warn_limit(cfg, current_val) :
+				      raa228249_set_iout_oc_warn_limit(cfg, current_val);
 			if (ret) {
-				raa228249_get_iout_oc_warn_limit(cfg, &current_val);
+				if (cfg->type == sensor_dev_raa229140a)
+					raa229140a_get_iout_oc_warn_limit(cfg, &current_val);
+				else
+					raa228249_get_iout_oc_warn_limit(cfg, &current_val);
 				power_capping_info.current_threshold[vr_idx] = current_val;
 			} else {
 				LOG_ERR("Can't set IOUT_OC_WARN 0x%x", sensor_id);

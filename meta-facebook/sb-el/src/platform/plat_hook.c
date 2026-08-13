@@ -22,6 +22,7 @@
 #include "mp2971.h"
 #include "mp29816a.h"
 #include "raa228249.h"
+#include "raa229140a.h"
 #include "tmp431.h"
 #include "emc1413.h"
 #include "plat_gpio.h"
@@ -960,6 +961,13 @@ bool plat_get_vr_status(uint8_t rail, uint8_t vr_status_rail, uint16_t *vr_statu
 			goto err;
 		}
 		break;
+	case sensor_dev_raa229140a:
+		if (!raa229140a_get_vr_status(cfg, pre_proc_args->vr_page, pmbus_reg_id,
+					      vr_status)) {
+			LOG_ERR("The VR RAA229140A vr status reading failed");
+			goto err;
+		}
+		break;
 	default:
 		LOG_ERR("Unsupport VR type(%x)", cfg->type);
 		goto err;
@@ -1019,6 +1027,12 @@ bool plat_clear_vr_status(uint8_t rail)
 			goto err;
 		}
 		break;
+	case sensor_dev_raa229140a:
+		if (!raa229140a_clear_vr_status(cfg, pre_proc_args->vr_page)) {
+			LOG_ERR("The VR RAA229140A vr status clear failed");
+			goto err;
+		}
+		break;
 	default:
 		LOG_ERR("Unsupport VR type(%x)", cfg->type);
 		goto err;
@@ -1072,6 +1086,12 @@ bool plat_get_vout_command(uint8_t rail, uint16_t *millivolt)
 	case sensor_dev_raa228249:
 		if (!raa228249_get_vout_command(cfg, pre_proc_args->vr_page, millivolt)) {
 			LOG_ERR("The VR RAA228249 vout reading failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_raa229140a:
+		if (!raa229140a_get_vout_command(cfg, pre_proc_args->vr_page, millivolt)) {
+			LOG_ERR("The VR RAA229140A vout reading failed");
 			goto err;
 		}
 		break;
@@ -1157,6 +1177,12 @@ bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_perm)
 			goto err;
 		}
 		break;
+	case sensor_dev_raa229140a:
+		if (!raa229140a_set_vout_command(cfg, page, millivolt)) {
+			LOG_ERR("The VR RAA229140A vout setting failed");
+			goto err;
+		}
+		break;
 	default:
 		LOG_ERR("Unsupport VR type(%x)", cfg->type);
 		goto err;
@@ -1211,6 +1237,12 @@ bool plat_get_get_vout_offset(uint8_t rail, uint16_t *vout_offset)
 	case sensor_dev_raa228249:
 		if (!raa228249_get_vout_offset(cfg, vout_offset)) {
 			LOG_ERR("The VR RAA228249 vout setting failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_raa229140a:
+		if (!raa229140a_get_vout_offset(cfg, vout_offset)) {
+			LOG_ERR("The VR RAA229140A vout offset reading failed");
 			goto err;
 		}
 		break;

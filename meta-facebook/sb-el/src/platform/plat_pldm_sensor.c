@@ -188,10 +188,10 @@ uint8_t convert_vr_addr(uint8_t bus, uint8_t addr, uint8_t vr_change_mode)
 	for (int i = 0; i < ARRAY_SIZE(vr_addr_map_table); i++) {
 		if (vr_addr_map_table[i].sensor_bus == bus &&
 		    vr_addr_map_table[i].fab1_1nd_addr == addr) {
-			if (vr_change_mode == FAB1_2ND_RNS)
+			if (vr_change_mode == FAB1_2ND_RNS || vr_change_mode == FAB2_2ND_RNS)
 				return vr_addr_map_table[i].fab1_2nd_addr;
-			// else if (vr_change_mode == FAB1_1ND_MPS)
-			// LOG_DBG("don't need to change VR address");
+			else if (vr_change_mode == FAB1_1ND_MPS || vr_change_mode == FAB2_1ND_MPS)
+				LOG_DBG("don't need to change VR address");
 			else
 				LOG_ERR("vr_change_mode: 0x%x error", vr_change_mode);
 		}
@@ -13537,6 +13537,9 @@ void change_sensor_cfg(uint8_t asic_board_id, uint8_t tmp_module, uint8_t vr_mod
 		}
 		if (vr_module == VR_MODULE_RNS) {
 			LOG_WRN("change VR address to RNS");
+			if(board_rev_id >= REV_ID_EVT2)
+				vr_change_mode = FAB2_2ND_RNS;
+			else
 			vr_change_mode = FAB1_2ND_RNS;
 		}
 		// default is old settings so do nothing
@@ -13548,6 +13551,9 @@ void change_sensor_cfg(uint8_t asic_board_id, uint8_t tmp_module, uint8_t vr_mod
 		}
 		if (vr_module == VR_MODULE_RNS) {
 			LOG_WRN("change VR address to RNS");
+			if(board_rev_id >= REV_ID_EVT2)
+				vr_change_mode = FAB2_2ND_RNS;
+			else
 			vr_change_mode = FAB1_2ND_RNS;
 		}
 		// default is old settings so do nothing
@@ -13641,6 +13647,15 @@ void change_sensor_cfg(uint8_t asic_board_id, uint8_t tmp_module, uint8_t vr_mod
 
 			if (vr_change_mode == FAB1_2ND_RNS)
 				vr_table[j].pldm_sensor_cfg.type = sensor_dev_raa228249;
+			if (vr_change_mode == FAB2_2ND_RNS) {
+				if ((num >= SENSOR_NUM_ASIC_P0V75_NUWA0_VDD_TEMP_C &&
+				     num <= SENSOR_NUM_ASIC_P0V75_NUWA1_VDD_PWR_W) ||
+				    num == SENSOR_NUM_ASIC_P0V75_NUWA0_VDD_INPUT_VOLT_V ||
+				    num == SENSOR_NUM_ASIC_P0V75_NUWA1_VDD_INPUT_VOLT_V)
+					vr_table[j].pldm_sensor_cfg.type = sensor_dev_raa228249;
+				else
+					vr_table[j].pldm_sensor_cfg.type = sensor_dev_raa229140a;
+			}
 
 			bus = vr_table[j].pldm_sensor_cfg.port;
 			vr_table[j].pldm_sensor_cfg.target_addr = convert_vr_addr(bus,
