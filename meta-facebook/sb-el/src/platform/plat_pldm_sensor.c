@@ -13614,9 +13614,6 @@ void change_sensor_cfg(uint8_t asic_board_id, uint8_t tmp_module, uint8_t vr_mod
 	uint8_t ina238_addr = 0;
 	LOG_INF("vr change mode: 0x%x", vr_change_mode);
 	for (uint8_t i = VR_SENSOR_THREAD_ID; i <= QUICK_VR_SENSOR_THREAD_ID; i++) {
-		if (vr_change_mode == FAB1_1ND_MPS)
-			continue;
-
 		pldm_sensor_info *vr_table = plat_pldm_sensor_load(i);
 		if (vr_table == NULL)
 			return;
@@ -13624,26 +13621,26 @@ void change_sensor_cfg(uint8_t asic_board_id, uint8_t tmp_module, uint8_t vr_mod
 		int count = plat_pldm_sensor_get_sensor_count(i);
 		if (count < 0)
 			return;
-		// change VR & INA238(EVT1B and later) address
+		// change INA238(EVT1B and later) address regardless of VR vendor
 		if (board_rev_id >= REV_ID_EVT1B)
 			ina238_addr = get_ina238_addr();
 
 		for (uint8_t j = 0; j < count; j++) {
-
 			uint8_t num = vr_table[j].pldm_sensor_cfg.num;
 
 			if (num == SENSOR_NUM_INA238_VOLT_VBUS_A ||
 				num == SENSOR_NUM_INA238_CURR_A ||
 				num == SENSOR_NUM_INA238_PWR_W) {
-
 				uint8_t old_addr = vr_table[j].pldm_sensor_cfg.target_addr;
 				vr_table[j].pldm_sensor_cfg.target_addr = ina238_addr;
 
 				LOG_INF("change INA238 sensor 0x%x addr 0x%x -> 0x%x",
 					num, old_addr, ina238_addr);
-
 				continue;
 			}
+
+			if (vr_change_mode == FAB1_1ND_MPS)
+				continue;
 
 			if (vr_change_mode == FAB1_2ND_RNS)
 				vr_table[j].pldm_sensor_cfg.type = sensor_dev_raa228249;
