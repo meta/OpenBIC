@@ -13800,7 +13800,7 @@ bool is_ina238_access(uint8_t sensor_num)
 	if (!polling_access)
 		return false;
 
-	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_num);
+	const sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_num);
 	if (cfg == NULL || cfg->target_addr == 0)
 		return false;
 
@@ -13818,9 +13818,6 @@ bool is_ina238_access(uint8_t sensor_num)
 
 	/* Require PRSNT_INA238_CABLE == 0 in addition to existing polling flags */
 	if (gpio_get(PRSNT_INA238_CABLE) != 0)
-		return false;
-
-	if (!polling_access)
 		return false;
 
 	return true;

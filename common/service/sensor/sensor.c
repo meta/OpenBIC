@@ -161,9 +161,12 @@ const char *const sensor_type_name[] = {
 	sensor_name_to_num(octeon)
 	sensor_name_to_num(tps25990)
 	sensor_name_to_num(raa229140a)
+<<<<<<< HEAD
 	sensor_name_to_num(mp29526)
 	sensor_name_to_num(iris_smbus)
 	sensor_name_to_num(rsm3514e)
+=======
+>>>>>>> e4cefbbf8 (common: raa229140a: add VR sensor driver support)
 };
 // clang-format on
 
@@ -409,6 +412,7 @@ SENSOR_DRIVE_INIT_DECLARE(tps25990);
 #ifdef ENABLE_RAA229140a
 SENSOR_DRIVE_INIT_DECLARE(raa229140a);
 #endif
+<<<<<<< HEAD
 #ifdef ENABLE_MP29526
 SENSOR_DRIVE_INIT_DECLARE(mp29526);
 #endif
@@ -418,6 +422,8 @@ SENSOR_DRIVE_INIT_DECLARE(iris_smbus);
 #ifdef ENABLE_RSM3514E
 SENSOR_DRIVE_INIT_DECLARE(rsm3514e);
 #endif
+=======
+>>>>>>> e4cefbbf8 (common: raa229140a: add VR sensor driver support)
 
 // The sequence needs to same with SENSOR_DEV ID
 sensor_drive_api sensor_drive_tbl[] = {
@@ -830,6 +836,7 @@ sensor_drive_api sensor_drive_tbl[] = {
 #else
 	SENSOR_DRIVE_TYPE_UNUSE(raa229140a),
 #endif
+<<<<<<< HEAD
 #ifdef ENABLE_MP29526
 	SENSOR_DRIVE_TYPE_INIT_MAP(mp29526),
 #else
@@ -845,6 +852,9 @@ sensor_drive_api sensor_drive_tbl[] = {
 #else
 	SENSOR_DRIVE_TYPE_UNUSE(rsm3514e),
 #endif
+=======
+
+>>>>>>> e4cefbbf8 (common: raa229140a: add VR sensor driver support)
 };
 
 static void init_sensor_num(void)
