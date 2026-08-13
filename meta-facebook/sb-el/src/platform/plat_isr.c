@@ -33,6 +33,7 @@
 #include "plat_util.h"
 #include "plat_class.h"
 #include "plat_power_capping.h"
+#include "plat_user_setting.h"
 
 LOG_MODULE_REGISTER(plat_isr);
 
@@ -125,7 +126,11 @@ void ISR_GPIO_RST_ARKE_PWR_ON_PLD_R1_N()
 		// when dc on clear cpld polling alert status
 		uint8_t err_type = CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE;
 		reset_error_log_states(err_type);
+
+		/* getting VR VOUT settings */
 		vr_vout_offset_get_init();
+		vr_vout_default_settings_init();
+		vr_vout_user_settings_init();
 		//set perm vout command when DC on
 		if (!set_all_vout_command())
 			LOG_ERR("set all vout command fail!");
