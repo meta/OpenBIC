@@ -21,6 +21,7 @@
 #include "pmbus.h"
 #include "mp2971.h"
 #include "mp29816a.h"
+#include "mp29526.h"
 #include "raa228249.h"
 #include "raa229140a.h"
 #include "tmp431.h"
@@ -960,6 +961,12 @@ bool plat_get_vr_status(uint8_t rail, uint8_t vr_status_rail, uint16_t *vr_statu
 			goto err;
 		}
 		break;
+	case sensor_dev_mp29526:
+		if (!mp29526_get_vr_status(cfg, pre_proc_args->vr_page, pmbus_reg_id, vr_status)) {
+			LOG_ERR("The VR MPS29526 vr status reading failed");
+			goto err;
+		}
+		break;
 	case sensor_dev_raa228249:
 		if (!raa228249_get_vr_status(cfg, pre_proc_args->vr_page, pmbus_reg_id,
 					     vr_status)) {
@@ -1027,6 +1034,12 @@ bool plat_clear_vr_status(uint8_t rail)
 			goto err;
 		}
 		break;
+	case sensor_dev_mp29526:
+		if (!mp29526_clear_vr_status(cfg, pre_proc_args->vr_page)) {
+			LOG_ERR("The VR MPS29526 vr status clear failed");
+			goto err;
+		}
+		break;
 	case sensor_dev_raa228249:
 		if (!raa228249_clear_vr_status(cfg, pre_proc_args->vr_page)) {
 			LOG_ERR("The VR RAA228249 vr status clear failed");
@@ -1086,6 +1099,12 @@ bool plat_get_vout_command(uint8_t rail, uint16_t *millivolt)
 	case sensor_dev_mp29816a:
 		if (!mp29816a_get_vout_command(cfg, pre_proc_args->vr_page, millivolt)) {
 			LOG_ERR("The VR MPS29816a vout reading failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_mp29526:
+		if (!mp29526_get_vout_command(cfg, pre_proc_args->vr_page, millivolt)) {
+			LOG_ERR("The VR MPS29526 vout reading failed");
 			goto err;
 		}
 		break;
@@ -1177,6 +1196,12 @@ bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_perm)
 			goto err;
 		}
 		break;
+	case sensor_dev_mp29526:
+		if (!mp29526_set_vout_command(cfg, page, millivolt)) {
+			LOG_ERR("The VR MPS29526 vout setting failed");
+			goto err;
+		}
+		break;
 	case sensor_dev_raa228249:
 		if (!raa228249_set_vout_command(cfg, page, millivolt)) {
 			LOG_ERR("The VR RAA228249 vout setting failed");
@@ -1237,6 +1262,12 @@ bool plat_get_get_vout_offset(uint8_t rail, uint16_t *vout_offset)
 	case sensor_dev_mp2971:
 		if (!mp2971_get_vout_offset(cfg, pre_proc_args->vr_page, vout_offset)) {
 			LOG_ERR("The VR MPS2971 vout setting failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_mp29526:
+		if (!mp29526_get_vout_offset(cfg, vout_offset)) {
+			LOG_ERR("The VR MPS29526 vout setting failed");
 			goto err;
 		}
 		break;

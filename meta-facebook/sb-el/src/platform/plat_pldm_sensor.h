@@ -64,8 +64,10 @@
 // VR_MODULE_MPS module addr
 //PU438
 #define ASIC_P0V75_NUWA0_VDD_ADDR (0x50 >> 1)
+#define ASIC_P0V75_NUWA0_VDD_FAB2_ADDR 0x61 // 7-bit address
 //PU437
 #define ASIC_P0V75_NUWA1_VDD_ADDR (0x4C >> 1)
+#define ASIC_P0V75_NUWA1_VDD_FAB2_ADDR 0x60 // 7-bit address
 //PU535
 #define ASIC_P0V9_OWL_E_TRVDD_ADDR (0xEE >> 1)
 #define ASIC_P0V75_OWL_E_TRVDD_ADDR (0xEE >> 1)
@@ -376,6 +378,7 @@ char16_t *char16_strcat_char(char16_t *dest, char16_t ch);
 bool get_raw_data_from_sensor_id(uint8_t sensor_id, uint8_t offset, uint8_t *val, uint8_t len);
 void change_sensor_cfg(uint8_t asic_board_id, uint8_t tmp_module, uint8_t vr_module,
 		       uint8_t ubc_module, uint8_t board_rev_id);
+void refresh_fab2_mps_nuwa_addr(void);
 uint8_t convert_tmp_addr(uint8_t bus, uint8_t addr, uint8_t tmp_change_mode);
 uint8_t convert_vr_addr(uint8_t bus, uint8_t addr, uint8_t vr_change_mode);
 uint32_t plat_get_pdr_size(uint8_t pdr_type);

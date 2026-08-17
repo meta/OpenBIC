@@ -20,6 +20,7 @@
 #include "plat_cpld.h"
 #include "mp2971.h"
 #include "mp29816a.h"
+#include "mp29526.h"
 #include "raa228249.h"
 #include "raa229140a.h"
 #include "plat_pldm_fw_update.h"
@@ -101,6 +102,12 @@ void cmd_get_fw_version_vr(const struct shell *shell, size_t argc, char **argv)
 				continue;
 			}
 			break;
+		case sensor_dev_mp29526:
+			if (!mp29526_get_fw_version(cfg->port, cfg->target_addr, &version)) {
+				shell_print(shell, "The VR MPS29526 version reading failed");
+				continue;
+			}
+			break;
 		case sensor_dev_raa228249:
 			if (!raa228249_get_crc(cfg->port, cfg->target_addr, &version)) {
 				shell_print(shell, "The VR RAA228249 version reading failed");
@@ -137,7 +144,7 @@ void cmd_get_fw_version_vr(const struct shell *shell, size_t argc, char **argv)
 				    remain);
 		else if (cfg->type == sensor_dev_isl69259 || cfg->type == sensor_dev_raa228238 ||
 			 cfg->type == sensor_dev_raa228249 || cfg->type == sensor_dev_raa229140a ||
-			 cfg->type == sensor_dev_mp2971)
+			 cfg->type == sensor_dev_mp2971 || cfg->type == sensor_dev_mp29526)
 			shell_print(shell, "%-8x|%-40s|%08x|%04x", i, sensor_name, version, remain);
 		else
 			shell_print(shell, "not support sensor_dev: %d", cfg->type);

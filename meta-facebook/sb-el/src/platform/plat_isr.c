@@ -122,6 +122,8 @@ void ISR_GPIO_RST_ARKE_PWR_ON_PLD_R1_N()
 	if (gpio_get(RST_ARKE_PWR_ON_PLD_R1_N)) {
 		plat_switch_pin_a12(false); /* HIGH -> A12 = SPIP1_CS */
 		ioexp_init();
+		/* Retry FAB2 VR address detection after the VRs become accessible. */
+		refresh_fab2_mps_nuwa_addr();
 		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
 			// Ensure U200053 is initialized before initializing U200051.
 			init_U200052_IO();
