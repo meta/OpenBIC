@@ -37,6 +37,22 @@
 
 LOG_MODULE_REGISTER(plat_isr);
 
+uint8_t pwr_steps_on_flag = 0;
+
+void set_pwr_steps_on_flag(uint8_t flag_value)
+{
+	pwr_steps_on_flag = flag_value;
+	//check value
+	if (pwr_steps_on_flag != flag_value)
+		LOG_ERR("set pwr_steps_on_flag failed, now pwr_steps_on_flag = %d",
+			pwr_steps_on_flag);
+}
+
+uint8_t get_pwr_steps_on_flag(void)
+{
+	return pwr_steps_on_flag;
+}
+
 void ISR_GPIO_ALL_VR_PM_ALERT_R_N()
 {
 	if (gpio_get(ALL_VR_PM_ALERT_R_N) == GPIO_LOW) {
@@ -47,8 +63,8 @@ void ISR_GPIO_ALL_VR_PM_ALERT_R_N()
 void ISR_GPIO_FM_PLD_UBC_EN_R()
 {
 	// check step on setting flag
-	// if (get_pwr_steps_on_flag() == 1)
-	// 	return;
+	if (get_pwr_steps_on_flag() == 1)
+		return;
 
 	LOG_INF("FM_PLD_UBC_EN_R = %d\nDC ON", gpio_get(FM_PLD_UBC_EN_R));
 
@@ -145,22 +161,6 @@ void ISR_GPIO_RST_ARKE_PWR_ON_PLD_R1_N()
 			ast_pwm_set(0, PWM_PORT6);
 		}
 	}
-}
-
-uint8_t pwr_steps_on_flag = 0;
-
-void set_pwr_steps_on_flag(uint8_t flag_value)
-{
-	pwr_steps_on_flag = flag_value;
-	//check value
-	if (pwr_steps_on_flag != flag_value)
-		LOG_ERR("set pwr_steps_on_flag failed, now pwr_steps_on_flag = %d",
-			pwr_steps_on_flag);
-}
-
-uint8_t get_pwr_steps_on_flag(void)
-{
-	return pwr_steps_on_flag;
 }
 
 void ISR_GPIO_SMB_HAMSA_MMC_LVC33_ALERT_N()
