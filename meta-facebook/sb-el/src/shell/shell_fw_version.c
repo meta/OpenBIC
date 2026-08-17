@@ -21,6 +21,7 @@
 #include "mp2971.h"
 #include "mp29816a.h"
 #include "raa228249.h"
+#include "raa229140a.h"
 #include "plat_pldm_fw_update.h"
 #include "plat_pldm_sensor.h"
 #include "plat_hook.h"
@@ -111,6 +112,17 @@ void cmd_get_fw_version_vr(const struct shell *shell, size_t argc, char **argv)
 				continue;
 			}
 			break;
+		case sensor_dev_raa229140a:
+			if (!raa229140a_get_crc(cfg->port, cfg->target_addr, &version)) {
+				shell_print(shell, "The VR RAA229140A version reading failed");
+				continue;
+			}
+			if (raa229140a_get_remaining_wr(cfg->port, cfg->target_addr,
+							(uint8_t *)&remain) < 0) {
+				shell_print(shell, "The VR RAA229140A remaining reading failed");
+				continue;
+			}
+			break;
 		default:
 			shell_print(shell, "Unsupport VR type(%d)", i);
 			return;
@@ -124,7 +136,8 @@ void cmd_get_fw_version_vr(const struct shell *shell, size_t argc, char **argv)
 			shell_print(shell, "%-8x|%-40s|    %04x|%04x", i, sensor_name, version,
 				    remain);
 		else if (cfg->type == sensor_dev_isl69259 || cfg->type == sensor_dev_raa228238 ||
-			 cfg->type == sensor_dev_raa228249 || cfg->type == sensor_dev_mp2971)
+			 cfg->type == sensor_dev_raa228249 || cfg->type == sensor_dev_raa229140a ||
+			 cfg->type == sensor_dev_mp2971)
 			shell_print(shell, "%-8x|%-40s|%08x|%04x", i, sensor_name, version, remain);
 		else
 			shell_print(shell, "not support sensor_dev: %d", cfg->type);
