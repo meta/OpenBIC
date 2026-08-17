@@ -25,5 +25,9 @@
 
 bool plat_i2c_read(uint8_t bus, uint8_t addr, uint8_t offset, uint8_t *data, uint8_t len);
 bool plat_i2c_write(uint8_t bus, uint8_t addr, uint8_t offset, uint8_t *data, uint8_t len);
+bool linear11_from_scaled(uint16_t val, uint16_t scale, uint16_t *raw);
+uint16_t linear11_to_scaled(uint16_t raw, uint16_t scale);
+uint16_t linear16u_from_scaled(uint16_t val, uint16_t scale, uint8_t fractional_bits);
+uint16_t linear16u_to_scaled(uint16_t raw, uint16_t scale, uint8_t fractional_bits);
 
 #endif

@@ -34,6 +34,7 @@
 #include "plat_class.h"
 #include "plat_power_capping.h"
 #include "plat_user_setting.h"
+#include "plat_vr_test_mode.h"
 
 LOG_MODULE_REGISTER(plat_isr);
 
@@ -152,7 +153,7 @@ void ISR_GPIO_RST_ARKE_PWR_ON_PLD_R1_N()
 			LOG_ERR("set all vout command fail!");
 	} else {
 		plat_switch_pin_a12(true); /* LOW -> A12 = GPIO73 output low */
-		// vr_test_mode_enable(false);
+		vr_test_mode_enable(false);
 		// if board id == EVB , ctrl fan pwm
 		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
 			LOG_INF("dc off, set fan pwm 0");

@@ -26,7 +26,7 @@
 static bool cmd_is_dc_on(const struct shell *shell)
 {
 	if (!is_mb_dc_on()) {
-		shell_warn(shell, "please iris power on first");
+		shell_warn(shell, "please arke power on first");
 		return false;
 	}
 
@@ -177,12 +177,19 @@ void cmd_vr_test_mode_show_val(const struct shell *shell, size_t argc, char **ar
 
 static int get_vr_reg_to_int(uint8_t vr_rail, uint8_t reg)
 {
-	uint8_t data[2] = { 0 };
-	if (!get_raw_data_from_sensor_id(vr_rail_table[vr_rail].sensor_id, reg, data, 2))
+	uint16_t val = 0;
+	if (!get_vr_test_mode_reg_value(vr_rail, reg, &val))
 		return -1;
 
-	uint16_t raw_val = (data[1] << 8) | data[0];
-	return (int)raw_val;
+	return (int)val;
+}
+
+static uint8_t get_vr_uvp_reg(uint8_t vr_rail)
+{
+	uint8_t sensor_id = vr_rail_table[vr_rail].sensor_id;
+	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+
+	return (cfg && cfg->type == sensor_dev_raa229140a) ? VR_RAA229140A_UVP_REG : VR_UVP_REG;
 }
 
 void cmd_vr_test_mode_show_real(const struct shell *shell, size_t argc, char **argv)
@@ -205,7 +212,7 @@ void cmd_vr_test_mode_show_real(const struct shell *shell, size_t argc, char **a
 				uint16_t uvp = 0;
 				uint16_t ovp = 0;
 				if (get_vr_fixed_uvp_ovp_enable(i)) {
-					uvp = get_vr_reg_to_int(i, VR_UVP_REG);
+					uvp = get_vr_reg_to_int(i, get_vr_uvp_reg(i));
 					ovp = get_vr_reg_to_int(i, VR_OVP_REG);
 				} else if (!get_vr_offset_uvp_ovp(i, &uvp, &ovp))
 					shell_error(shell, "get vr %d uvp/ovp fail", i);
