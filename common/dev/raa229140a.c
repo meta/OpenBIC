@@ -29,13 +29,8 @@ LOG_MODULE_REGISTER(raa229140a);
 #define VR_RAA_REG_REMAIN_WR 0x35
 #define VR_RAA_REG_DMA_ADDR 0xC7
 #define VR_RAA_REG_DMA_DATA 0xC5
-<<<<<<< HEAD
 #define VR_RAA_REG_PROG_STATUS 0x83
 #define VR_RAA_REG_CRC 0xF8
-=======
-#define VR_RAA_REG_PROG_STATUS 0x7E
-#define VR_RAA_REG_CRC 0x94
->>>>>>> e4cefbbf8 (common: raa229140a: add VR sensor driver support)
 #define VR_RAA_REG_DEVID 0xAD
 #define VR_RAA_REG_IOUT_EVENT 0xE89E
 
@@ -110,12 +105,7 @@ static uint8_t ascii_to_byte(uint8_t *ascii_buf)
 	return ascii_to_val(ascii_buf[0]) << 4 | ascii_to_val(ascii_buf[1]);
 }
 
-<<<<<<< HEAD
 static bool raa229140a_i2c_read(uint8_t bus, uint8_t addr, uint8_t reg, uint8_t *data, uint8_t len)
-=======
-static bool raa229140a_i2c_read(uint8_t bus, uint8_t addr, uint8_t reg, uint8_t *data,
-				uint8_t len)
->>>>>>> e4cefbbf8 (common: raa229140a: add VR sensor driver support)
 {
 	CHECK_NULL_ARG_WITH_RETURN(data, false);
 
@@ -216,11 +206,7 @@ uint8_t raa229140a_read(sensor_cfg *cfg, int *reading)
 		val = slinear11_to_float(read_value);
 		break;
 	default:
-<<<<<<< HEAD
 		LOG_ERR("Not supported offset: 0x%x", offset);
-=======
-		LOG_ERR("Not support offset: 0x%x", offset);
->>>>>>> e4cefbbf8 (common: raa229140a: add VR sensor driver support)
 		return SENSOR_FAIL_TO_ACCESS;
 	}
 
@@ -300,15 +286,10 @@ bool raa229140a_get_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *milliv
 
 	uint8_t command_data[2] = { 0 };
 	uint8_t offset_data[2] = { 0 };
-<<<<<<< HEAD
 	if (!raa229140a_i2c_read(cfg->port, cfg->target_addr, PMBUS_VOUT_COMMAND, command_data,
 				 2) ||
 	    !raa229140a_i2c_read(cfg->port, cfg->target_addr, PMBUS_VOUT_CAL_OFFSET, offset_data,
 				 2))
-=======
-	if (!raa229140a_i2c_read(cfg->port, cfg->target_addr, PMBUS_VOUT_COMMAND, command_data, 2) ||
-	    !raa229140a_i2c_read(cfg->port, cfg->target_addr, PMBUS_VOUT_CAL_OFFSET, offset_data, 2))
->>>>>>> e4cefbbf8 (common: raa229140a: add VR sensor driver support)
 		return false;
 
 	uint16_t command = command_data[0] | (command_data[1] << 8);
@@ -328,12 +309,8 @@ bool raa229140a_set_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *milliv
 	CHECK_NULL_ARG_WITH_RETURN(millivolt, false);
 
 	uint8_t offset_data[2] = { 0 };
-<<<<<<< HEAD
 	if (!raa229140a_i2c_read(cfg->port, cfg->target_addr, PMBUS_VOUT_CAL_OFFSET, offset_data,
 				 2))
-=======
-	if (!raa229140a_i2c_read(cfg->port, cfg->target_addr, PMBUS_VOUT_CAL_OFFSET, offset_data, 2))
->>>>>>> e4cefbbf8 (common: raa229140a: add VR sensor driver support)
 		return false;
 
 	int16_t offset = offset_data[0] | (offset_data[1] << 8);
@@ -344,13 +321,8 @@ bool raa229140a_set_vout_command(sensor_cfg *cfg, uint8_t rail, uint16_t *milliv
 	}
 
 	uint8_t command_data[2] = { command & 0xFF, (command >> 8) & 0xFF };
-<<<<<<< HEAD
 	return raa229140a_i2c_write(cfg->port, cfg->target_addr, PMBUS_VOUT_COMMAND, command_data,
 				    sizeof(command_data));
-=======
-	return raa229140a_i2c_write(cfg->port, cfg->target_addr, PMBUS_VOUT_COMMAND,
-				     command_data, sizeof(command_data));
->>>>>>> e4cefbbf8 (common: raa229140a: add VR sensor driver support)
 }
 
 bool raa229140a_get_iout_oc_warn_limit(sensor_cfg *cfg, uint16_t *value)
@@ -453,26 +425,6 @@ bool raa229140a_get_vout_offset(sensor_cfg *cfg, uint16_t *offset_return)
 	return true;
 }
 
-<<<<<<< HEAD
-=======
-int raa229140a_get_hex_mode(uint8_t bus, uint8_t addr, uint8_t *mode)
-{
-	CHECK_NULL_ARG_WITH_RETURN(mode, SENSOR_UNSPECIFIED_ERROR);
-	uint8_t tbuf[2], rbuf[4];
-
-	tbuf[0] = VR_RAA_REG_HEX_MODE_CFG0;
-	tbuf[1] = VR_RAA_REG_HEX_MODE_CFG1;
-	if (raa229140a_dma_read(bus, addr, tbuf, rbuf) < 0) {
-		LOG_ERR("Read HEX mode failed from dev: 0x%x", addr);
-		return -1;
-	}
-
-	*mode = (rbuf[0] == 0) ? RAA_GEN3_LEGACY : RAA_GEN3_PRODUCTION;
-
-	return 0;
-}
-
->>>>>>> e4cefbbf8 (common: raa229140a: add VR sensor driver support)
 int raa229140a_get_remaining_wr(uint8_t bus, uint8_t addr, uint8_t *remain)
 {
 	CHECK_NULL_ARG_WITH_RETURN(remain, SENSOR_UNSPECIFIED_ERROR);
@@ -669,20 +621,9 @@ bool raa229140a_fwupdate(uint8_t bus, uint8_t addr, uint8_t *img_buff, uint32_t 
 	CHECK_NULL_ARG_WITH_RETURN(img_buff, false);
 
 	uint8_t ret = false;
-<<<<<<< HEAD
 	uint8_t remain = 0;
 	uint32_t devid = 0;
 
-=======
-	uint8_t remain = 0, mode = 0xff;
-	uint32_t devid = 0;
-
-	// check mode
-	if (raa229140a_get_hex_mode(bus, addr, &mode)) {
-		return false;
-	}
-
->>>>>>> e4cefbbf8 (common: raa229140a: add VR sensor driver support)
 	// check remaining writes
 	if (raa229140a_get_remaining_wr(bus, addr, &remain) < 0) {
 		return false;
@@ -714,15 +655,6 @@ bool raa229140a_fwupdate(uint8_t bus, uint8_t addr, uint8_t *img_buff, uint32_t 
 		goto exit;
 	}
 
-<<<<<<< HEAD
-=======
-	// check mode
-	if (mode != dev_cfg.mode) {
-		LOG_ERR("HEX mode %u mismatch, expect %u", mode, dev_cfg.mode);
-		goto exit;
-	}
-
->>>>>>> e4cefbbf8 (common: raa229140a: add VR sensor driver support)
 	// write configuration data
 	I2C_MSG i2c_msg = { 0 };
 	uint8_t retry = 3;
