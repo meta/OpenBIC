@@ -35,6 +35,7 @@
 #include "plat_power_capping.h"
 #include "plat_user_setting.h"
 #include "plat_vr_test_mode.h"
+#include "plat_pldm_sensor.h"
 
 LOG_MODULE_REGISTER(plat_isr);
 
