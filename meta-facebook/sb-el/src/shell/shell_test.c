@@ -1,10 +1,13 @@
 #include <stdlib.h>
 #include <shell/shell.h>
 
+#include "mctp.h"
+#include "pldm.h"
 #include "plat_pldm_sensor.h"
 #include "plat_cpld.h"
 #include "plat_adc.h"
 #include "plat_class.h"
+#include "plat_mctp.h"
 
 // test command
 void cmd_test(const struct shell *shell, size_t argc, char **argv)
@@ -93,6 +96,58 @@ void cmd_cpld_write(const struct shell *shell, size_t argc, char **argv)
 	shell_warn(shell, "cpld write %02x to offset %02x", data, offset);
 }
 
+void pldm_cmd(const struct shell *shell, size_t argc, char **argv)
+{
+	if (argc < 4) {
+		shell_warn(shell, "Help: test pldm <eid> <pldm_type> <pldm_cmd> <pldm_data>");
+		return;
+	}
+
+	const uint8_t eid = strtol(argv[1], NULL, 16);
+	const size_t req_len = argc - 4;
+	if (req_len > PLDM_MAX_DATA_SIZE) {
+		shell_warn(shell, "PLDM request data is too long (max %u bytes)",
+			   PLDM_MAX_DATA_SIZE);
+		return;
+	}
+
+	uint8_t resp_buf[PLDM_MAX_DATA_SIZE] = { 0 };
+	uint8_t *req_buf = malloc(req_len ? req_len : 1);
+	if (!req_buf) {
+		shell_warn(shell, "Failed to allocate PLDM request buffer");
+		return;
+	}
+
+	pldm_msg pmsg = { 0 };
+	pmsg.hdr.msg_type = MCTP_MSG_TYPE_PLDM;
+	pmsg.hdr.pldm_type = strtol(argv[2], NULL, 16);
+	pmsg.hdr.cmd = strtol(argv[3], NULL, 16);
+	pmsg.hdr.rq = PLDM_REQUEST;
+	pmsg.len = req_len;
+	pmsg.buf = req_buf;
+
+	for (int i = 0; i < pmsg.len; i++) {
+		pmsg.buf[i] = strtol(argv[i + 4], NULL, 16);
+	}
+
+	mctp *mctp_inst = NULL;
+	if (!get_mctp_info_by_eid(eid, &mctp_inst, &pmsg.ext_params)) {
+		shell_print(shell, "Failed to get mctp info by eid 0x%x", eid);
+		free(req_buf);
+		return;
+	}
+
+	uint16_t resp_len = mctp_pldm_read(mctp_inst, &pmsg, resp_buf, sizeof(resp_buf));
+	free(req_buf);
+	if (!resp_len) {
+		shell_print(shell, "Failed to get mctp-pldm response");
+		return;
+	}
+
+	shell_print(shell, "RESP");
+	shell_hexdump(shell, resp_buf, resp_len);
+}
+
 void cmd_info(const struct shell *shell, size_t argc, char **argv)
 {
 	static const char *const vr_module_str[] = {
@@ -134,15 +189,16 @@ void cmd_info(const struct shell *shell, size_t argc, char **argv)
 }
 
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_cpld_cmds, SHELL_CMD(dump, NULL, "cpld dump", cmd_cpld_dump),
-			SHELL_CMD(write, NULL, "write cpld register", cmd_cpld_write),	
-			SHELL_SUBCMD_SET_END);
+			       SHELL_CMD(write, NULL, "write cpld register", cmd_cpld_write),
+			       SHELL_SUBCMD_SET_END);
 
-SHELL_STATIC_SUBCMD_SET_CREATE(sub_test_cmds, SHELL_CMD(test, NULL, "test command", cmd_test),
-			SHELL_CMD(read_raw, NULL, "read raw data test command",cmd_read_raw),
-			SHELL_CMD(read_info, NULL, "read sensor info test command", cmd_read_info),
-			SHELL_CMD(cpld, &sub_cpld_cmds, "cpld commands", NULL),
-			SHELL_CMD(info, NULL, "info commands", cmd_info),
-			SHELL_SUBCMD_SET_END);
+SHELL_STATIC_SUBCMD_SET_CREATE(
+	sub_test_cmds, SHELL_CMD(test, NULL, "test command", cmd_test),
+	SHELL_CMD(read_raw, NULL, "read raw data test command", cmd_read_raw),
+	SHELL_CMD(read_info, NULL, "read sensor info test command", cmd_read_info),
+	SHELL_CMD(cpld, &sub_cpld_cmds, "cpld commands", NULL),
+	SHELL_CMD(pldm, NULL, "send pldm to bmc", pldm_cmd),
+	SHELL_CMD(info, NULL, "info commands", cmd_info), SHELL_SUBCMD_SET_END);
 
 /* Root of command test */
 SHELL_CMD_REGISTER(test, &sub_test_cmds, "Test commands", NULL);
