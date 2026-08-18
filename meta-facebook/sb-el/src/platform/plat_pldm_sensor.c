@@ -38,9 +38,12 @@ static bool plat_sensor_ubc_polling_enable_flag = true;
 static bool plat_sensor_temp_polling_enable_flag = true;
 static bool plat_sensor_vr_polling_enable_flag = true;
 static bool plat_sensor_ina238_polling_enable_flag = true;
+static bool plat_vr_change_done_flag = false;
 static uint8_t plat_sensor_one_step_power_enable_flag = 0;
 uint8_t pwr_capping_pollng_rate_type = 0;
 static uint8_t ina238_polling_rate_type = 0;
+void set_plat_vr_change_done_flag(bool value);
+bool get_plat_vr_change_done_flag(void);
 
 static ina238_init_arg ina238_pwr_w_init_args = {
 	.is_init = false,
@@ -206,7 +209,7 @@ uint8_t convert_vr_addr(uint8_t bus, uint8_t addr, uint8_t vr_change_mode)
 				};
 				msg.data[0] = PMBUS_REVISION;
 
-				if (i2c_master_read_without_error_log(&msg, 0) == 0){
+				if (i2c_master_read_without_error_log(&msg, 0) == 0) {
 					fab2_mps_ic_second_source = true;
 					return vr_addr_map_table[i].fab2_1nd_addr;
 				}
@@ -13669,6 +13672,10 @@ void change_sensor_cfg(uint8_t asic_board_id, uint8_t tmp_module, uint8_t vr_mod
 			}
 			LOG_INF("change VR sensors 0x%x address to 0x%x",
 				vr_table[j].pldm_sensor_cfg.num, vr_table[j].pldm_sensor_cfg.target_addr);
+			
+			if (is_mb_dc_on()){
+				set_plat_vr_change_done_flag(true);
+			}
 		}
 	}
 
@@ -13768,6 +13775,8 @@ void refresh_fab2_mps_nuwa_addr(void)
 		}
 	}
 
+	set_plat_vr_change_done_flag(true);
+
 	LOG_DBG("refresh FAB2 MPS NUWA address: NUWA0=0x%x, NUWA1=0x%x", nuwa0_addr,
 		nuwa1_addr);
 }
@@ -13807,6 +13816,11 @@ void set_plat_sensor_one_step_enable_flag(uint8_t value)
 	plat_sensor_one_step_power_enable_flag = value;
 }
 
+void set_plat_vr_change_done_flag(bool value)
+{
+	plat_vr_change_done_flag = value;
+}
+
 bool get_plat_sensor_polling_enable_flag()
 {
 	return plat_sensor_polling_enable_flag;
@@ -13835,6 +13849,11 @@ bool get_plat_sensor_vr_polling_enable_flag()
 uint8_t get_plat_sensor_one_step_enable_flag()
 {
 	return plat_sensor_one_step_power_enable_flag;
+}
+
+bool get_plat_vr_change_done_flag()
+{
+	return plat_vr_change_done_flag;
 }
 
 bool is_ubc_access(uint8_t sensor_num)
@@ -13898,11 +13917,11 @@ bool is_vr_access(uint8_t sensor_num)
 {
 	if (get_plat_sensor_one_step_enable_flag() == ONE_STEP_POWER_MAGIC_NUMBER) {
 		return (get_plat_sensor_vr_polling_enable_flag() &&
-			get_plat_sensor_polling_enable_flag() && is_update_state_idle());
+			get_plat_sensor_polling_enable_flag() && is_update_state_idle() && get_plat_vr_change_done_flag());
 
 	} else {
 		return (is_dc_access(sensor_num) && get_plat_sensor_vr_polling_enable_flag() &&
-			get_plat_sensor_polling_enable_flag() && is_update_state_idle());
+			get_plat_sensor_polling_enable_flag() && is_update_state_idle() && get_plat_vr_change_done_flag());
 	}
 }
 
