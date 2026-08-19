@@ -140,8 +140,8 @@ void ISR_GPIO_RST_ARKE_PWR_ON_PLD_R1_N()
 		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
 			LOG_INF("dc on, set fan pwm 65");
 			init_pwm_dev();
-			ast_pwm_set(65, PWM_PORT2);
-			ast_pwm_set(65, PWM_PORT6);
+			ast_pwm_set(100, PWM_PORT2);
+			ast_pwm_set(100, PWM_PORT6);
 		}
 		// when dc on clear cpld polling alert status
 		uint8_t err_type = CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE;
