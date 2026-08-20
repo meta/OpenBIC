@@ -76,6 +76,7 @@
 #define OWL_JTAG_SEL 0x21
 #define OWL_UART_SEL 0x22
 #define OWL_DVT_ENABLE 0x9E
+#define STANDALONE_MODE 0xC4
 // (High -> OUT, Low -> IN)
 #define HAMSA_MFIO12_13_14_CTRL 0xB8
 #define NUWA_MFIO12_13_14_CTRL 0xB9
