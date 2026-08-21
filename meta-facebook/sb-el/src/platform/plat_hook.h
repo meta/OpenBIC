@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -316,6 +316,8 @@ int get_vr_mp29816a_reg(uint8_t rail, uint16_t *get_data, uint8_t get_reg);
 int set_vr_mp29816a_reg(uint8_t rail, uint16_t *set_value, uint8_t set_reg);
 int get_vr_mp2971_reg(uint8_t rail, uint16_t *get_data, uint8_t get_reg);
 int set_vr_mp2971_reg(uint8_t rail, uint16_t *set_data, uint8_t set_reg);
+int get_vr_mp29526_reg(uint8_t rail, uint16_t *get_data, uint8_t get_reg);
+int set_vr_mp29526_reg(uint8_t rail, uint16_t *set_value, uint8_t set_reg);
 uint8_t get_svs_flag();
 bool set_svs_flag(uint8_t flag, bool is_perm);
 uint8_t get_svs_asic_voltage_flag();

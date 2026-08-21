@@ -102,6 +102,8 @@
 #define ASIC_P0V9_OWL_W_TRVDD_ADDR (0xD8 >> 1)
 #define ASIC_P0V75_OWL_W_TRVDD_ADDR (0xD8 >> 1)
 
+extern bool fab2_mps_ic_second_source;
+
 // VR_MODULE_RNS module addr
 // PU438
 #define ASIC_P0V75_NUWA0_VDD_RNS_ADDR (0xEC >> 1)

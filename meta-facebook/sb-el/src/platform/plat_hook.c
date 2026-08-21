@@ -1428,6 +1428,148 @@ int get_vr_page(uint8_t rail)
 	return pre_sensor_read_args->vr_page;
 }
 
+int set_vr_mp29526_reg(uint8_t rail, uint16_t *set_value, uint8_t set_reg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(set_value, false);
+
+	int ret = -1;
+	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
+	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+	if (cfg == NULL) {
+		LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);
+		return -1;
+	}
+
+	if (cfg->pre_sensor_read_hook) {
+		if (!cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args)) {
+			LOG_ERR("sensor id: 0x%x pre-read fail", sensor_id);
+			goto err;
+		}
+	}
+
+	/* rail travels in cfg->arg0 (MP29526_RAIL_1/2), not the VR_RAIL_E index above */
+	switch (set_reg) {
+	case UVP_THRESHOLD:
+		if (!mp29526_set_uvp_threshold(cfg, set_value)) {
+			LOG_ERR("The VR mp29526 uvp threshold setting failed");
+			goto err;
+		}
+		break;
+	case TOTAL_OCP:
+		if (!mp29526_set_total_ocp(cfg, set_value)) {
+			LOG_ERR("The VR mp29526 total ocp setting failed");
+			goto err;
+		}
+		break;
+	case OVP_2_ACTION:
+		if (!mp29526_set_ovp_2_action(cfg, set_value)) {
+			LOG_ERR("The VR mp29526 ovp 2 action setting failed");
+			goto err;
+		}
+		break;
+	case OVP_1:
+		if (!mp29526_set_ovp_1(cfg, set_value)) {
+			LOG_ERR("The VR mp29526 ovp 1 setting failed");
+			goto err;
+		}
+		break;
+	case VOUT_MAX:
+		if (!mp29526_set_vout_max(cfg, cfg->arg0, set_value)) {
+			LOG_ERR("The VR mp29526 vout max setting failed");
+			goto err;
+		}
+		break;
+	default:
+		LOG_ERR("Unsupport VR mp29526 setting reg (0x%x)", set_reg);
+		goto err;
+	}
+	ret = 0;
+err:
+	if (cfg->post_sensor_read_hook) {
+		if (cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args, NULL) == false) {
+			LOG_ERR("sensor id: 0x%x post-read fail", sensor_id);
+		}
+	}
+	return ret;
+}
+
+int get_vr_mp29526_reg(uint8_t rail, uint16_t *get_data, uint8_t get_reg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(get_data, false);
+
+	int ret = -1;
+	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
+	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+	if (cfg == NULL) {
+		LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);
+		return -1;
+	}
+	if (cfg->pre_sensor_read_hook) {
+		if (!cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args)) {
+			LOG_ERR("sensor id: 0x%x pre-read fail", sensor_id);
+			goto err;
+		}
+	}
+
+	/* rail travels in cfg->arg0 (MP29526_RAIL_1/2), not the VR_RAIL_E index above */
+	switch (get_reg) {
+	case UVP:
+		if (!mp29526_get_uvp(cfg, get_data)) {
+			LOG_ERR("The VR mp29526 uvp threshold setting failed");
+			goto err;
+		}
+		break;
+	case VOUT_MAX:
+		if (!mp29526_get_vout_max(cfg, cfg->arg0, get_data)) {
+			LOG_ERR("The VR mp29526 vout max setting failed");
+			goto err;
+		}
+		break;
+	case VOUT_COMMAND:
+		if (!mp29526_get_vout_command(cfg, cfg->arg0, get_data)) {
+			LOG_ERR("The VR mp29526 vout command reading failed");
+			goto err;
+		}
+		break;
+	case VOUT_OFFSET:
+		if (!mp29526_get_vout_offset(cfg, get_data)) {
+			LOG_ERR("The VR mp29526 vout offset setting failed");
+			goto err;
+		}
+		break;
+	case TOTAL_OCP:
+		if (!mp29526_get_total_ocp(cfg, get_data)) {
+			LOG_ERR("The VR mp29526 total ocp setting failed");
+			goto err;
+		}
+		break;
+	case OVP_1:
+		if (!mp29526_get_ovp_1(cfg, get_data)) {
+			LOG_ERR("The VR mp29526 ovp 1 setting failed");
+			goto err;
+		}
+		break;
+	case OVP_2:
+		if (!mp29526_get_ovp_2(cfg, get_data)) {
+			LOG_ERR("The VR mp29526 ovp 2 setting failed");
+			goto err;
+		}
+		break;
+	default:
+		LOG_ERR("Unsupport VR mp29526 getting reg (0x%x)", get_reg);
+		goto err;
+	}
+
+	ret = 0;
+err:
+	if (cfg->post_sensor_read_hook) {
+		if (cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args, NULL) == false) {
+			LOG_ERR("sensor id: 0x%x post-read fail", sensor_id);
+		}
+	}
+	return ret;
+}
+
 int set_vr_mp29816a_reg(uint8_t rail, uint16_t *set_value, uint8_t set_reg)
 {
 	CHECK_NULL_ARG_WITH_RETURN(set_value, false);
