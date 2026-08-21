@@ -29,7 +29,7 @@ enum {
 };
 
 #define ADC_AVERGE_TIMES_MIN 1
-#define ADC_AVERGE_TIMES_MAX 1000
+#define ADC_AVERGE_TIMES_MAX 500
 
 #define ADI_AD4058 0x0
 #define TIC_ADS7066 0x1
