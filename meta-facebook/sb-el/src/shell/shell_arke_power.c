@@ -12,6 +12,7 @@
 #include "shell_arke_power.h"
 #include "plat_gpio.h"
 #include "plat_hook.h"
+#include "plat_hwmon.h"
 #include "plat_util.h"
 // arke power command
 
@@ -570,6 +571,12 @@ void cmd_arke_steps_on(const struct shell *shell, size_t argc, char **argv)
 	}
 
 	if (strcmp(steps_on[power_steps].name, "FM_P5V_EN") == 0) {
+		if (value == 1) {
+			LOG_INF("dc on, set fan pwm 100");
+			init_pwm_dev();
+			ast_pwm_set(100, PWM_PORT2);
+			ast_pwm_set(100, PWM_PORT6);
+		}
 		if (check_p3v3_p5v_pwrgd()) {
 			set_plat_sensor_one_step_enable_flag(ONE_STEP_POWER_MAGIC_NUMBER);
 		}
@@ -580,6 +587,11 @@ void cmd_arke_steps_on(const struct shell *shell, size_t argc, char **argv)
 
 void cmd_arke_disable_steps_on(const struct shell *shell, size_t argc, char **argv)
 {
+	LOG_INF("dc off, set fan pwm 0");
+	init_pwm_dev();
+	ast_pwm_set(0, PWM_PORT2);
+	ast_pwm_set(0, PWM_PORT6);
+
 	// init power steps
 	power_steps = 0;
 	set_pwr_steps_on_flag(0);

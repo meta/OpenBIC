@@ -138,7 +138,7 @@ void ISR_GPIO_RST_ARKE_PWR_ON_PLD_R1_N()
 		add_sync_oc_warn_to_work();
 		// if board id == EVB , ctrl fan pwm
 		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
-			LOG_INF("dc on, set fan pwm 65");
+			LOG_INF("dc on, set fan pwm 100");
 			init_pwm_dev();
 			ast_pwm_set(100, PWM_PORT2);
 			ast_pwm_set(100, PWM_PORT6);
