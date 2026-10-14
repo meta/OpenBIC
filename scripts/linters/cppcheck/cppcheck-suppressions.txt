@@ -28,3 +28,6 @@ normalCheckLevelMaxBranches
 // The __weak platform hooks and helpers defined in this file make cppcheck
 // treat their result checks as constant; platforms override the hooks.
 knownConditionTrueFalse:common/service/pldm/pldm_firmware_update.c
+
+// The IBI callback signatures are fixed by the Zephyr I3C driver API.
+constParameterCallback:common/hal/hal_i3c.c
