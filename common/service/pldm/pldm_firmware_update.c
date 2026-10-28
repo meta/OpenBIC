@@ -1462,6 +1462,18 @@ static bool pldm_get_bic_fw_version(uint8_t *buf, uint8_t *len)
 	return true;
 }
 
+/* get_fw_version_fn for the BIC entry so it is listed in the GetFirmwareParameters component table */
+bool pldm_get_bic_comp_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
+{
+	ARG_UNUSED(info_p);
+	CHECK_NULL_ARG_WITH_RETURN(len, false);
+
+	uint8_t tmp_buf[16];
+
+	// the length query passes a NULL buf
+	return pldm_get_bic_fw_version(buf ? buf : tmp_buf, len);
+}
+
 static uint8_t get_firmware_parameter(void *mctp_inst, uint8_t *buf, uint16_t len,
 				      uint8_t instance_id, uint8_t *resp, uint16_t *resp_len,
 				      void *ext_params)

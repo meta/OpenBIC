@@ -710,6 +710,7 @@ uint8_t pldm_retimer_recovery(void *fw_update_param);
 uint8_t fw_recovery_eeprom(I2C_MSG *msg, uint32_t offset, uint16_t msg_len, uint8_t *msg_buf,
 			   uint8_t flag);
 uint8_t pldm_bic_activate(void *arg);
+bool pldm_get_bic_comp_fw_version(void *info_p, uint8_t *buf, uint8_t *len);
 
 uint8_t plat_pldm_query_device_identifiers(const uint8_t *buf, uint16_t len, uint8_t *resp,
 					   uint16_t *resp_len);

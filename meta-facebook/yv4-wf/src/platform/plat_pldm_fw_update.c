@@ -77,7 +77,7 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 		.inf = COMP_UPDATE_VIA_SPI,
 		.activate_method = COMP_ACT_SELF,
 		.self_act_func = pldm_bic_activate,
-		.get_fw_version_fn = NULL,
+		.get_fw_version_fn = pldm_get_bic_comp_fw_version,
 		.self_apply_work_func = NULL,
 		.comp_version_str = NULL,
 	},
