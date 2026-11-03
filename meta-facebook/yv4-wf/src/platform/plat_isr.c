@@ -330,6 +330,15 @@ void process_non_pmbus_vr_event_handler(struct k_work *work_item)
 		return;
 	}
 
+	// Without ASIC, the ASIC rail PWRGD pins are not driven and may glitch (noise),
+	// so only the E1S rails are valid VR fault sources.
+	if (get_blade_configuration() == BLADE_CONFIG_without_ASIC &&
+	    work_info->vr_source != P12V_E1S_0 && work_info->vr_source != P3V3_E1S_0) {
+		LOG_INF("Blade config without ASIC: skip ASIC VR fault, GPIO(%d)",
+			work_info->gpio_num);
+		return;
+	}
+
 	struct pldm_addsel_data sel_msg = { 0 };
 	sel_msg.event_type = VR_FAULT;
 	sel_msg.assert_type = EVENT_ASSERTED;
