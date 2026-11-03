@@ -162,5 +162,6 @@ uint8_t pal_get_extend_sensor_config();
 void load_sensor_config(void);
 bool disable_dimm_pmic_sensor(uint8_t sensor_num);
 uint8_t get_dimm_status(uint8_t dimm_index);
+void plat_reset_sensor_poll_time(uint8_t sensor_num);
 
 #endif

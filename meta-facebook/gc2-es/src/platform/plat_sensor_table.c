@@ -921,6 +921,21 @@ bool pal_is_time_to_poll(uint8_t sensor_num, int poll_time)
 	return true;
 }
 
+/* Zero last_access_time so pal_is_time_to_poll() lets the sensor poll right away,
+ * instead of waiting out poll_time after polling gets re-enabled.
+ */
+void plat_reset_sensor_poll_time(uint8_t sensor_num)
+{
+	int table_size = sizeof(diff_poll_time_sensor_table) / sizeof(sensor_poll_time_cfg);
+
+	for (int i = 0; i < table_size; i++) {
+		if ((sensor_num == SENSOR_POLL_ALL_SENSORS) ||
+		    (sensor_num == diff_poll_time_sensor_table[i].sensor_num)) {
+			diff_poll_time_sensor_table[i].last_access_time = 0;
+		}
+	}
+}
+
 uint8_t get_hsc_pwr_reading(int *reading)
 {
 	// add template function for future use
