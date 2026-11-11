@@ -1,0 +1,66 @@
+From bf221be745a4ab40f56de51ee3e438c00f447bbd Mon Sep 17 00:00:00 2001
+From: cooper_huang <cooper_huang@aspeedtech.com>
+Date: Tue, 27 Oct 2026 11:55:39 +0800
+Subject: [PATCH] drivers: flash: spi_nor_multi_dev: support JESD216F QER 110b
+
+QER 110b puts QE at SR2 bit 1, read with 35h and written with 31h
+using one data byte. spi_nor_sr2_bit1_config() already does this for
+QER 100b, so use it for 110b too. These flashes used to fall back to
+non-quad mode.
+
+Also replace the local SPI_NOR_QE_* values with enum
+jesd216_dw15_qer_type from jesd216.h. QER 111b is reserved and has no
+enum value, so keep SPI_NOR_QE_NOT_SUPPORTED for it.
+
+Signed-off-by: cooper_huang <cooper_huang@aspeedtech.com>
+---
+ drivers/flash/spi_nor_multi_dev.c | 17 +++++++----------
+ 1 file changed, 7 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/flash/spi_nor_multi_dev.c b/drivers/flash/spi_nor_multi_dev.c
+index 9f922b26a09..c97dd8f9ef7 100644
+--- a/drivers/flash/spi_nor_multi_dev.c
++++ b/drivers/flash/spi_nor_multi_dev.c
+@@ -761,12 +761,8 @@ end:
+ 	return ret;
+ }
+ 
+-#define SPI_NOR_QE_NO_NEED        0x0 /* Micron, Gigadevice */
+-#define SPI_NOR_QE_SR_CR_BIT1     0x1
++/* QER 111b is reserved in JESD216, so it has no jesd216_dw15_qer_type value */
+ #define SPI_NOR_QE_NOT_SUPPORTED  0x7 /* GigaDevice */
+-#define SPI_NOR_QE_SR1_BIT6       0x2 /* MXIC, ISSI */
+-#define SPI_NOR_QE_SR2_BIT1       0x4 /* Winbond */
+-#define SPI_NOR_QE_CF1_BIT1       0x5 /* Cypress */
+ 
+ static int spi_nor_qe_config(const struct device *dev, uint32_t qer)
+ {
+@@ -776,19 +772,20 @@ static int spi_nor_qe_config(const struct device *dev, uint32_t qer)
+ 	acquire_device(dev);
+ 
+ 	switch (qer) {
+-	case SPI_NOR_QE_NO_NEED:
++	case JESD216_DW15_QER_NONE: /* Micron, GigaDevice */
+ 	case SPI_NOR_QE_NOT_SUPPORTED:
+ 		break;
+-	case SPI_NOR_QE_SR_CR_BIT1:
++	case JESD216_DW15_QER_S2B1v1:
+ 		ret = spi_nor_sr_cr_bit1_config(dev);
+ 		break;
+-	case SPI_NOR_QE_SR1_BIT6:
++	case JESD216_DW15_QER_S1B6: /* MXIC, ISSI */
+ 		ret = spi_nor_sr1_bit6_config(dev);
+ 		break;
+-	case SPI_NOR_QE_SR2_BIT1:
++	case JESD216_DW15_QER_S2B1v4: /* Winbond */
++	case JESD216_DW15_QER_S2B1v6: /* JESD216F: SR2 read by 35h, written by 31h */
+ 		ret = spi_nor_sr2_bit1_config(dev);
+ 		break;
+-	case SPI_NOR_QE_CF1_BIT1:
++	case JESD216_DW15_QER_S2B1v5: /* Cypress */
+ 		ret = spi_nor_cf1_bit1_config(dev);
+ 		break;
+ 	default:
+-- 
+2.34.1
+
