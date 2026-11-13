@@ -1076,6 +1076,12 @@ static uint8_t request_update(void *mctp_inst, uint8_t *buf, uint16_t len, uint8
 		goto exit;
 	}
 
+	if (fw_update_tid != NULL) {
+		LOG_ERR("Previous firmware update is still stopping");
+		resp_p->completion_code = PLDM_FW_UPDATE_CC_ALREADY_IN_UPDATE_MODE;
+		goto exit;
+	}
+
 	fw_update_cfg.max_buff_size = req_p->max_transfer_size;
 	if (fw_update_cfg.max_buff_size > MAX_FWUPDATE_RSP_BUF_SIZE) {
 		LOG_WRN("Maximum transfer size 0x%x over mctp response buffer size limit 0x%x, set to default.",
