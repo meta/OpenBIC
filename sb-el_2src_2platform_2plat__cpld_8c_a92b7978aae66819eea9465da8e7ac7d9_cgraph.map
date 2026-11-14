@@ -1,0 +1,9 @@
+<map id="get_vr_hot" name="get_vr_hot">
+<area shape="rect" id="node1" title=" " alt="" coords="5,56,88,83"/>
+<area shape="rect" id="node2" href="$sb-el_2src_2platform_2plat__class_8c.html#a9d3145ec260256885f5ad7ae0fee1381" title=" " alt="" coords="138,5,265,32"/>
+<area shape="rect" id="node3" href="$sb-el_2src_2platform_2plat__cpld_8c.html#ae2158527dc59da6acbe7d119b1602f98" title=" " alt="" coords="148,56,255,83"/>
+<area shape="rect" id="node7" href="$sb-el_2src_2platform_2plat__ioexp_8c.html#aa6bfdda57f6bfc42e4a31018185b8ad2" title=" " alt="" coords="136,107,267,133"/>
+<area shape="rect" id="node4" href="$minerva-ag_2src_2platform_2plat__isr_8c.html#ad8887b1d0c4bbc7a6f1c25870a6d9051" title=" " alt="" coords="315,81,413,108"/>
+<area shape="rect" id="node5" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="461,81,580,108"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="628,81,771,108"/>
+</map>

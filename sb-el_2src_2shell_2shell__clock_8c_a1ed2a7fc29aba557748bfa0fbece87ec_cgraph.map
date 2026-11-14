@@ -1,0 +1,11 @@
+<map id="handle_single_clock_status" name="handle_single_clock_status">
+<area shape="rect" id="node1" title=" " alt="" coords="5,104,144,145"/>
+<area shape="rect" id="node2" href="$plat__clock_8c.html#a7059753a67f200fcb7efabfbfcc5455e" title=" " alt="" coords="225,71,371,112"/>
+<area shape="rect" id="node7" href="$plat__clock_8c.html#a990942dcecbf3f69f1a092b5f5e0800a" title=" " alt="" coords="217,5,379,47"/>
+<area shape="rect" id="node8" href="$sb-el_2src_2shell_2shell__clock_8c.html#ab7b1bedad1cf85f39ef0b17ce1f133ac" title=" " alt="" coords="192,136,404,177"/>
+<area shape="rect" id="node9" href="$hal__i2c_8c.html#a10a12888a55c2d866fcf01cbd342652f" title=" " alt="" coords="668,165,787,191"/>
+<area shape="rect" id="node3" href="$hal__i2c_8c.html#a129beb22fde8deaaaed57af95c31eb16" title=" " alt="" coords="452,41,619,83"/>
+<area shape="rect" id="node5" href="$minerva-ag_2src_2platform_2plat__isr_8c.html#a99dfe1bff0c2df0fa9632a165a6fcd3f" title=" " alt="" coords="484,107,587,134"/>
+<area shape="rect" id="node4" href="$hal__i2c_8c.html#abe0116512c803f4b7188c17345eb998f" title=" " alt="" coords="836,107,979,134"/>
+<area shape="rect" id="node6" href="$hal__i2c_8c.html#a044cf163a5942b056d4a4feb0c056e9e" title=" " alt="" coords="667,107,788,134"/>
+</map>
