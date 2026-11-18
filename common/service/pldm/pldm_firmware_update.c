@@ -1503,10 +1503,7 @@ static uint8_t get_firmware_parameter(void *mctp_inst, uint8_t *buf, uint16_t le
 	uint8_t error_code[] = PLDM_CREATE_ERR_STR_ARRAY(PLDM_COMMON_ERR_CODE);
 	uint8_t *ver_str_p = (uint8_t *)resp_p + sizeof(struct pldm_get_firmware_parameters_resp);
 
-	if (!pldm_get_bic_fw_version(ver_str_p, &resp_p->active_comp_image_set_ver_str_len)) {
-		resp_p->completion_code = PLDM_ERROR;
-		return PLDM_SUCCESS;
-	}
+	pldm_get_bic_fw_version(ver_str_p, &resp_p->active_comp_image_set_ver_str_len);
 
 	cnt_len += resp_p->active_comp_image_set_ver_str_len;
 	ver_str_p += resp_p->active_comp_image_set_ver_str_len;
