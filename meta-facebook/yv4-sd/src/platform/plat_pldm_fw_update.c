@@ -99,7 +99,7 @@ pldm_fw_update_info_t PLDMUPDATE_FW_CONFIG_TABLE[] = {
 		.inf = COMP_UPDATE_VIA_SPI,
 		.activate_method = COMP_ACT_SELF,
 		.self_act_func = pldm_bic_activate,
-		.get_fw_version_fn = NULL,
+		.get_fw_version_fn = pldm_get_bic_comp_fw_version,
 		.self_apply_work_func = NULL,
 		.comp_version_str = NULL,
 	},
@@ -368,17 +368,18 @@ static uint8_t get_returned_devices_start_index(struct pldm_query_downstream_ide
 	return PLDM_SUCCESS;
 }
 
-static size_t calculate_descriptors_size(struct pldm_descriptor_string *descriptors, uint8_t count)
+static size_t calculate_descriptors_size(const struct pldm_descriptor_string *descriptors,
+					 uint8_t count)
 {
 	size_t size = 0;
 	for (size_t i = 0; i < count; i++) {
 		size += strlen(descriptors[i].descriptor_data);
 		switch (descriptors[i].descriptor_type) {
 		case PLDM_FWUP_VENDOR_DEFINED:
-			size += sizeof(struct pldm_vendor_defined_descriptor_tlv) +
-						descriptors[i].title_string ?
-					strlen(descriptors[i].title_string) :
-					0;
+			size += sizeof(struct pldm_vendor_defined_descriptor_tlv);
+			if (descriptors[i].title_string) {
+				size += strlen(descriptors[i].title_string);
+			}
 			break;
 		default:
 			size += sizeof(struct pldm_descriptor_tlv);
@@ -561,7 +562,7 @@ static bool plat_get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	CHECK_NULL_ARG_WITH_RETURN(buf, false);
 	CHECK_NULL_ARG_WITH_RETURN(len, false);
 
-	pldm_fw_update_info_t *p = (pldm_fw_update_info_t *)info_p;
+	const pldm_fw_update_info_t *p = (const pldm_fw_update_info_t *)info_p;
 
 	bool ret = false;
 	bool is_read_fail = false;
@@ -734,7 +735,7 @@ static bool plat_get_retimer_fw_version(void *info_p, uint8_t *buf, uint8_t *len
 	CHECK_NULL_ARG_WITH_RETURN(buf, false);
 	CHECK_NULL_ARG_WITH_RETURN(len, false);
 
-	pldm_fw_update_info_t *p = (pldm_fw_update_info_t *)info_p;
+	const pldm_fw_update_info_t *p = (const pldm_fw_update_info_t *)info_p;
 
 	bool ret = false;
 	uint8_t version[RETIMER_PT5161L_FW_VER_LEN];
@@ -789,10 +790,10 @@ static bool plat_get_bios_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 		*len = 3;
 	} else {
 		memcpy(buf, bios_version, strlen(bios_version));
+		*len = strlen(bios_version);
 	}
 
 	ret = true;
-	*len = strlen(bios_version);
 
 	return ret;
 }
