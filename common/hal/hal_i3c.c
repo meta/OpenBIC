@@ -26,6 +26,18 @@
 
 LOG_MODULE_REGISTER(hal_i3c);
 
+/*
+ * Driver-specific Hot-Join success check:
+ * - NPCM4: hj_req() returns -EALREADY once the target holds a dynamic
+ *   address; 0 only means the HJ was ACKed (DA not guaranteed).
+ * - Others: 0 means success, any other value is an error.
+ */
+#ifdef CONFIG_I3C_NPCM4
+#define I3C_HJ_DONE(ret) ((ret) == -EALREADY)
+#else
+#define I3C_HJ_DONE(ret) ((ret) == 0)
+#endif
+
 static const struct device *dev_i3c[I3C_MAX_NUM];
 static const struct device *dev_i3c_smq[I3C_MAX_NUM];
 static struct i3c_dev_desc i3c_desc_table[I3C_MAX_NUM];
@@ -413,7 +425,7 @@ int i3c_set_pid(I3C_MSG *msg, uint16_t slot_pid)
 	bool hj_done = false;
 	do {
 		ret = i3c_slave_hj_req(target);
-		if (ret == -EALREADY) {
+		if (I3C_HJ_DONE(ret)) {
 			/* Master has assigned a dynamic address => success */
 			hj_done = true;
 			break;
@@ -433,14 +445,14 @@ int i3c_set_pid(I3C_MSG *msg, uint16_t slot_pid)
 	} while ((I3C_HJ_RETRY_COUNT == 0xFF) || (retry < I3C_HJ_RETRY_COUNT));
 
 	/*
-	 * Only -EALREADY confirms the master really assigned a dynamic address.
-	 * If the finite retries are exhausted while the last attempt merely got
-	 * an ACK (ret == 0) without a DA, treat it as a failure.
+	 * Only I3C_HJ_DONE() confirms the HJ really completed. On NPCM4, if the
+	 * finite retries are exhausted while the last attempt merely got an ACK
+	 * (ret == 0) without a DA, treat it as a failure.
 	 */
 	ret = hj_done ? 0 : -ETIMEDOUT;
 #else
 	ret = i3c_slave_hj_req(target);
-	if (ret == -EALREADY)
+	if (I3C_HJ_DONE(ret))
 		ret = 0;
 #endif
 
