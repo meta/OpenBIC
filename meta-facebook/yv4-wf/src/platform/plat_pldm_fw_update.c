@@ -304,17 +304,18 @@ static uint8_t get_returned_devices_start_index(struct pldm_query_downstream_ide
 	return PLDM_SUCCESS;
 }
 
-static size_t calculate_descriptors_size(struct pldm_descriptor_string *descriptors, uint8_t count)
+static size_t calculate_descriptors_size(const struct pldm_descriptor_string *descriptors,
+					 uint8_t count)
 {
 	size_t size = 0;
 	for (size_t i = 0; i < count; i++) {
 		size += strlen(descriptors[i].descriptor_data);
 		switch (descriptors[i].descriptor_type) {
 		case PLDM_FWUP_VENDOR_DEFINED:
-			size += sizeof(struct pldm_vendor_defined_descriptor_tlv) +
-						descriptors[i].title_string ?
-					strlen(descriptors[i].title_string) :
-					0;
+			size += sizeof(struct pldm_vendor_defined_descriptor_tlv);
+			if (descriptors[i].title_string) {
+				size += strlen(descriptors[i].title_string);
+			}
 			break;
 		default:
 			size += sizeof(struct pldm_descriptor_tlv);
@@ -542,7 +543,7 @@ static bool plat_get_cxl_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	CHECK_NULL_ARG_WITH_RETURN(buf, false);
 	CHECK_NULL_ARG_WITH_RETURN(len, false);
 
-	pldm_fw_update_info_t *p = (pldm_fw_update_info_t *)info_p;
+	const pldm_fw_update_info_t *p = (const pldm_fw_update_info_t *)info_p;
 
 	uint8_t cxl_eid = plat_get_eid();
 	uint8_t cxl_comp_id = p->comp_identifier;
@@ -583,7 +584,7 @@ static bool plat_get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	CHECK_NULL_ARG_WITH_RETURN(buf, false);
 	CHECK_NULL_ARG_WITH_RETURN(len, false);
 
-	pldm_fw_update_info_t *p = (pldm_fw_update_info_t *)info_p;
+	const pldm_fw_update_info_t *p = (const pldm_fw_update_info_t *)info_p;
 
 	bool ret = false;
 	uint8_t bus = 0;
@@ -701,7 +702,7 @@ static uint8_t plat_pldm_pre_cxl_update(void *fw_update_param)
 {
 	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
 
-	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
+	const pldm_fw_update_param_t *p = (const pldm_fw_update_param_t *)fw_update_param;
 	uint8_t cxl_comp_id = p->comp_id;
 	uint8_t value = 0;
 
@@ -732,7 +733,7 @@ static uint8_t plat_pldm_post_cxl_update(void *fw_update_param)
 {
 	CHECK_NULL_ARG_WITH_RETURN(fw_update_param, 1);
 
-	pldm_fw_update_param_t *p = (pldm_fw_update_param_t *)fw_update_param;
+	const pldm_fw_update_param_t *p = (const pldm_fw_update_param_t *)fw_update_param;
 	uint8_t cxl_comp_id = p->comp_id;
 	uint8_t value = 0;
 

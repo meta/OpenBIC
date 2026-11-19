@@ -21,3 +21,10 @@ missingIncludeSystem
 
 // Ignore checkers report message
 checkersReport
+
+// Informational only: large files hit the default branch analysis limit.
+normalCheckLevelMaxBranches
+
+// The __weak platform hooks and helpers defined in this file make cppcheck
+// treat their result checks as constant; platforms override the hooks.
+knownConditionTrueFalse:common/service/pldm/pldm_firmware_update.c
