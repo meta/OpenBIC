@@ -737,8 +737,38 @@ static const uint8_t vr_reg_list_len_tbl[] = {
 	9, /* TI */
 };
 
+/* Clear the SENSOR_POLLING_DISABLE status left behind by a previous disable request.
+ * Without this, sensors with a pre_sensor_read_hook stay stuck: get_sensor_reading()
+ * returns early on the stale SENSOR_POLLING_DISABLE before cfg->read() is ever called,
+ * so nothing updates cache_status back to a real read result.
+ * SENSOR_NOT_PRESENT is left untouched, it is set intentionally by platform hooks.
+ */
+static void clear_polling_disable_status(sensor_cfg *cfg)
+{
+	if (cfg == NULL) {
+		return;
+	}
+
+	if (cfg->cache_status == SENSOR_POLLING_DISABLE) {
+		cfg->cache = SENSOR_FAIL;
+		cfg->cache_status = SENSOR_INIT_STATUS;
+	}
+}
+
 void plat_sensor_poll_state_changed(uint8_t sensor_num, bool enabled)
 {
+	if (enabled && (sensor_num != SENSOR_POLL_GLOBAL_FLAG)) {
+		plat_reset_sensor_poll_time(sensor_num);
+		if (sensor_num == SENSOR_POLL_ALL_SENSORS) {
+			for (int i = 0; i < sensor_config_count; i++) {
+				clear_polling_disable_status(&sensor_config[i]);
+			}
+		} else {
+			clear_polling_disable_status(find_sensor_cfg_via_sensor_num(
+				sensor_config, sensor_config_count, sensor_num));
+		}
+	}
+
 	common_addsel_msg_t sel_msg = { 0 };
 	sel_msg.InF_target = BMC_IPMB;
 	sel_msg.sensor_type = IPMI_OEM_SENSOR_TYPE_SYS_STA;
