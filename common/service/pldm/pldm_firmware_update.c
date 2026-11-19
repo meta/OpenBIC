@@ -83,7 +83,7 @@ static uint16_t rcv_comp_cnt = 0;
 static uint16_t cur_update_comp_id = -1;
 static char cur_update_comp_str[100] = "unknown";
 
-static bool keep_update_flag = false;
+static volatile bool keep_update_flag = false;
 
 __weak void load_pldmupdate_comp_config(void)
 {
@@ -920,6 +920,12 @@ void req_fw_update_handler(void *mctp_p, void *ext_params, void *arg)
 					    sizeof(struct pldm_request_firmware_data_req), resp_buf,
 					    ARRAY_SIZE(resp_buf), ext_params);
 
+		if (keep_update_flag == false) {
+			LOG_ERR("Update was canceled while waiting for firmware data");
+			cur_aux_state = STATE_AUX_FAILED;
+			goto exit;
+		}
+
 		if (read_len == 0) {
 			LOG_ERR("Request data failed at(0x%x, 0x%x), received empty response data",
 				req.offset, req.length);
@@ -973,6 +979,12 @@ void req_fw_update_handler(void *mctp_p, void *ext_params, void *arg)
 		if (fw_info->update_func(&update_param)) {
 			LOG_ERR("Component %d update failed!", cur_update_comp_id);
 			report_tranfer(mctp_p, ext_params, PLDM_FW_UPDATE_GENERIC_ERROR);
+			cur_aux_state = STATE_AUX_FAILED;
+			goto exit;
+		}
+
+		if (keep_update_flag == false) {
+			LOG_ERR("Update was canceled after firmware block write");
 			cur_aux_state = STATE_AUX_FAILED;
 			goto exit;
 		}
