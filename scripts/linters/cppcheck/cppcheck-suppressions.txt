@@ -21,3 +21,6 @@ missingIncludeSystem
 
 // Ignore checkers report message
 checkersReport
+
+// The IBI callback signatures are fixed by the Zephyr I3C driver API.
+constParameterCallback:common/hal/hal_i3c.c

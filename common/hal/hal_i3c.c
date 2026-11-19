@@ -22,8 +22,21 @@
 #include <zephyr.h>
 #include <logging/log.h>
 #include "libutil.h"
+#include "plat_def.h"
 
 LOG_MODULE_REGISTER(hal_i3c);
+
+/*
+ * Driver-specific Hot-Join success check:
+ * - NPCM4: hj_req() returns -EALREADY once the target holds a dynamic
+ *   address; 0 only means the HJ was ACKed (DA not guaranteed).
+ * - Others: 0 means success, any other value is an error.
+ */
+#ifdef CONFIG_I3C_NPCM4
+#define I3C_HJ_DONE(ret) ((ret) == -EALREADY)
+#else
+#define I3C_HJ_DONE(ret) ((ret) == 0)
+#endif
 
 static const struct device *dev_i3c[I3C_MAX_NUM];
 static const struct device *dev_i3c_smq[I3C_MAX_NUM];
@@ -407,7 +420,42 @@ int i3c_set_pid(I3C_MSG *msg, uint16_t slot_pid)
 		return false;
 	}
 
+#ifdef I3C_HJ_RETRY_COUNT
+	uint8_t retry = 0;
+	bool hj_done = false;
+	do {
+		ret = i3c_slave_hj_req(target);
+		if (I3C_HJ_DONE(ret)) {
+			/* Master has assigned a dynamic address => success */
+			hj_done = true;
+			break;
+		}
+
+		if (ret == 0)
+			LOG_WRN("HJ ACKed but no dynamic address yet, retry: %d", retry);
+		else
+			LOG_WRN("HJ request failed, ret: %d, retry: %d", ret, retry);
+
+		if (I3C_HJ_RETRY_COUNT != 0xFF)
+			retry++;
+
+		if ((I3C_HJ_RETRY_COUNT == 0xFF) || (retry < I3C_HJ_RETRY_COUNT)) {
+			k_msleep(I3C_HJ_RETRY_DELAY_MS);
+		}
+	} while ((I3C_HJ_RETRY_COUNT == 0xFF) || (retry < I3C_HJ_RETRY_COUNT));
+
+	/*
+	 * Only I3C_HJ_DONE() confirms the HJ really completed. On NPCM4, if the
+	 * finite retries are exhausted while the last attempt merely got an ACK
+	 * (ret == 0) without a DA, treat it as a failure.
+	 */
+	ret = hj_done ? 0 : -ETIMEDOUT;
+#else
 	ret = i3c_slave_hj_req(target);
+	if (I3C_HJ_DONE(ret))
+		ret = 0;
+#endif
+
 	if (ret != 0) {
 		LOG_ERR("Failed to sends Hot-join request,ret: %d", ret);
 		k_mutex_unlock(&mutex_dev[msg->bus]);
@@ -476,18 +524,26 @@ void util_init_i3c(void)
 	}
 }
 
-static int get_bus_id(struct i3c_dev_desc *desc)
+static int get_bus_id(const struct i3c_dev_desc *desc)
 {
 	char i3c_dev_name[I3C_DEV_STR_LEN] = { 0 };
 	const char delim[2] = "_";
 	char *saveptr = NULL;
-	char *substr = NULL;
+	const char *substr = NULL;
 	int bus_id;
 
-	strncpy(i3c_dev_name, desc->bus->name, I3C_DEV_STR_LEN);
+	strncpy(i3c_dev_name, desc->bus->name, I3C_DEV_STR_LEN - 1);
 
-	substr = strtok_r(i3c_dev_name, delim, &saveptr);
+	if (strtok_r(i3c_dev_name, delim, &saveptr) == NULL) {
+		LOG_ERR("invalid i3c bus name");
+		return -1;
+	}
+
 	substr = strtok_r(NULL, delim, &saveptr);
+	if (substr == NULL) {
+		LOG_ERR("invalid i3c bus name");
+		return -1;
+	}
 
 	bus_id = atoi(substr);
 	if (bus_id > I3C_MAX_NUM) {
@@ -498,7 +554,7 @@ static int get_bus_id(struct i3c_dev_desc *desc)
 	return bus_id;
 }
 
-static int find_dev_i3c_idx(struct i3c_dev_desc *desc)
+static int find_dev_i3c_idx(const struct i3c_dev_desc *desc)
 {
 	int bus_id = get_bus_id(desc);
 	if (bus_id < 0) {
@@ -506,7 +562,7 @@ static int find_dev_i3c_idx(struct i3c_dev_desc *desc)
 	}
 
 	int i = 0;
-	struct i3c_dev_desc *desc_ptr = NULL;
+	const struct i3c_dev_desc *desc_ptr = NULL;
 	for (i = 0; i < i3c_desc_count; i++) {
 		desc_ptr = &i3c_desc_table[i];
 
