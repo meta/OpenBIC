@@ -413,7 +413,7 @@ int sb_write_fwblock(uint32_t addr, const uint32_t *data, uint32_t data_len)
 			      buf[MSG_PKT_LEN_OFFSET] + PKT_LEN_BYTE_SZ);
 }
 
-int iris_data_write(uint8_t *data, uint32_t data_size)
+int iris_data_write(const uint8_t *data, uint32_t data_size)
 {
 	int idx = 0;
 	int err = 0;
