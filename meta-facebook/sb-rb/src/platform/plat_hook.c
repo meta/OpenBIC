@@ -114,9 +114,7 @@ bool post_common_sensor_read(sensor_cfg *cfg, void *args, int *const reading)
 	ARG_UNUSED(args);
 
 	uint8_t sensor_number = cfg->num;
-	if (!post_sensor_reading_hook_func(sensor_number))
-		return false;
-	return true;
+	return post_sensor_reading_hook_func(sensor_number);
 }
 
 uint8_t emc1413_cache_status_0 = 0;

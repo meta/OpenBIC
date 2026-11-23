@@ -391,7 +391,7 @@ uint32_t smbus_mode_query(void)
 
 	return err == 0 ? rd & 0x7 : err;
 }
-int sb_write_fwblock(uint32_t addr, uint32_t *data, uint32_t data_len)
+int sb_write_fwblock(uint32_t addr, const uint32_t *data, uint32_t data_len)
 {
 	//smbus max payload for a transaction is 32
 	uint8_t buf[SMBUS_MAX_PKT_LEN] = { 0 };
@@ -438,7 +438,7 @@ int iris_data_write(uint8_t *data, uint32_t data_size)
 		// if error,  retry up to MAX_RETRIES
 		int tries = MAX_RETRIES;
 		while (tries) {
-			err = sb_write_fwblock(write_addr, (uint32_t *)(data_buf + offset),
+			err = sb_write_fwblock(write_addr, (const uint32_t *)(data_buf + offset),
 					       write_size);
 			if (err == true)
 				break;
