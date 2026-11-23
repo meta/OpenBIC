@@ -812,6 +812,8 @@ void ad4058_mode_init()
 	LOG_INF("ad4058 mode init done");
 }
 
+// This function must keep the void * parameter types required by the Zephyr thread callback.
+// cppcheck-suppress constParameter
 void adc_rainbow_polling_handler(void *p1, void *p2, void *p3)
 {
 	while (1) {

@@ -889,6 +889,8 @@ bool vr_vout_range_user_settings_init(void)
 		}
 		uint16_t vout_max = 0;
 		uint16_t vout_min = 0;
+		// The PDR lookup can fail when sensor data is missing; keep this failure path.
+		// cppcheck-suppress knownConditionTrueFalse
 		if (!plat_get_vout_range(i, &vout_max, &vout_min)) {
 			LOG_ERR("Can't find vout range default by rail index: %d", i);
 			return false;
