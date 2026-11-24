@@ -331,7 +331,7 @@ bool plat_get_alert_level_is_assert(void);
 // Bootstrape
 bool bootstrap_default_settings_init(void);
 bool bootstrap_user_settings_init(void);
-bool temp_threshold_user_settings_get(void *temp_threshold_user_settings);
+bool temp_threshold_user_settings_get(void *user_settings);
 bool set_bootstrap_table_and_user_settings(uint8_t rail, uint8_t *change_setting_value,
 					   uint8_t drive_index_level, bool is_perm,
 					   bool is_default);
@@ -339,7 +339,7 @@ bool strap_name_get(uint8_t rail, uint8_t **name);
 bool strap_enum_get(uint8_t *name, uint8_t *num);
 bool get_bootstrap_change_drive_level(int rail, int *drive_level);
 bool find_bootstrap_by_rail(uint8_t rail, bootstrap_mapping_register *result);
-bool bootstrap_user_settings_set(void *bootstrap_user_settings);
+bool bootstrap_user_settings_set(void *user_settings);
 bool set_bootstrap_table_val_to_ioexp(void);
 bool set_ioexp_val_to_bootstrap_table(void);
 bool set_bootstrap_val_to_device(uint8_t strap, uint8_t val);

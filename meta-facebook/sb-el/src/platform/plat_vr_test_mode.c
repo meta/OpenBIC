@@ -31,7 +31,7 @@ bool get_vr_test_mode_flag(void)
 {
 	return vr_test_mode_flag;
 }
-//clang-format off
+// clang-format off
 const vr_test_mode_setting_t vr_test_mode_table[] = {
 	// vr_rail, fast ocp: x/10(A), slow ocp: x/10(A), uvp: 1(mV), ovp: 1(mV), v max: 1(mV), lcr(mV), ucr(mV), vout_default(mV)
 	{ VR_RAIL_E_ASIC_P0V75_NUWA0_VDD, 14080, 14080, 200, 940, 930, 595, 930, 0 },
@@ -216,7 +216,7 @@ const mps_vr_test_mode_setting_t vr_mps_normal_mode_table[] = {
 	{ VR_RAIL_E_ASIC_P0V75_OWL_W_TRVDD, 10, 0, 350, 705, 795, NO_USE, NO_USE, 865, 945, 750,
 	  795, NO_USE },
 };
-//clang-format on
+// clang-format on
 const uint8_t vr_test_mode_table_size = ARRAY_SIZE(vr_test_mode_table);
 const uint8_t vr_test_mode_table_dafault_size = ARRAY_SIZE(vr_test_mode_table_default);
 
@@ -239,7 +239,7 @@ bool update_vr_reg(uint8_t rail, uint8_t reg, uint16_t val)
 static bool is_raa229140a_rail(uint8_t rail)
 {
 	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
-	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+	const sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
 
 	return cfg && cfg->type == sensor_dev_raa229140a;
 }
@@ -507,13 +507,15 @@ static bool set_mps_vr_test_mode_reg(bool is_default)
 		for (size_t j = 0; j < ARRAY_SIZE(regs); j++) {
 			set_val = regs[j].val;
 			if (i < VR_RAIL_E_ASIC_P0V9_OWL_E_TRVDD) {
-				if (!fab2_mps_ic_second_source){
-					if (set_vr_mp29816a_reg(cfg->vr_rail, &set_val, regs[j].function)) {
+				if (!fab2_mps_ic_second_source) {
+					if (set_vr_mp29816a_reg(cfg->vr_rail, &set_val,
+								regs[j].function)) {
 						LOG_ERR("MPS29816a VR rail %x set %s to %d failed",
 							cfg->vr_rail, regs[j].name, regs[j].val);
 					}
 				} else {
-					if (set_vr_mp29526_reg(cfg->vr_rail, &set_val, regs[j].function)) {
+					if (set_vr_mp29526_reg(cfg->vr_rail, &set_val,
+							       regs[j].function)) {
 						LOG_ERR("MPS29526 VR rail %x set %s to %d failed",
 							cfg->vr_rail, regs[j].name, regs[j].val);
 					}
@@ -565,15 +567,12 @@ void vr_test_mode_enable(bool onoff)
 		// if set to test mode, set divider enable
 		uint16_t action = 0;
 		uint16_t div_en = 0;
-		if (vr_test_mode_flag == true) {
+		if (vr_test_mode_flag) {
 			action = NO_ACTION;
 			div_en = DISABLE;
-		} else if (vr_test_mode_flag == false) {
+		} else {
 			action = LATCH_OFF;
 			div_en = ENABLE;
-		} else {
-			LOG_ERR("MPS test mode setting flag error! flag: %d", vr_test_mode_flag);
-			return;
 		}
 		for (uint8_t i = 0; i <= VR_RAIL_E_ASIC_P0V75_NUWA1_VDD; i++) {
 			// set ovp2 action to no action
@@ -607,6 +606,10 @@ void vr_test_mode_enable(bool onoff)
 
 void vr_test_mode_handler(void *arg1, void *arg2, void *arg3)
 {
+	ARG_UNUSED(arg1);
+	ARG_UNUSED(arg2);
+	ARG_UNUSED(arg3);
+
 	k_sleep(K_MSEC(5000)); // wait sensor thread ready
 
 	while (1) {

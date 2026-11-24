@@ -187,7 +187,7 @@ static int get_vr_reg_to_int(uint8_t vr_rail, uint8_t reg)
 static uint8_t get_vr_uvp_reg(uint8_t vr_rail)
 {
 	uint8_t sensor_id = vr_rail_table[vr_rail].sensor_id;
-	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+	const sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
 
 	return (cfg && cfg->type == sensor_dev_raa229140a) ? VR_RAA229140A_UVP_REG : VR_UVP_REG;
 }
@@ -250,7 +250,7 @@ void cmd_vr_test_mode_show_real(const struct shell *shell, size_t argc, char **a
 		// not include P3V3
 		for (uint8_t i = 0; i <= VR_RAIL_E_ASIC_P0V75_NUWA1_VDD; i++) {
 			uint8_t *rail_name = NULL;
-			if (!fab2_mps_ic_second_source){
+			if (!fab2_mps_ic_second_source) {
 				get_vr_mp29816a_reg(i, &uvp, UVP);
 				get_vr_mp29816a_reg(i, &vout_max, VOUT_MAX);
 				get_vr_mp29816a_reg(i, &vout_command, VOUT_COMMAND);

@@ -822,6 +822,10 @@ void ad4058_mode_init()
 
 void adc_electra_polling_handler(void *p1, void *p2, void *p3)
 {
+	ARG_UNUSED(p1);
+	ARG_UNUSED(p2);
+	ARG_UNUSED(p3);
+
 	while (1) {
 		/* Pull CS1 low before DC on to prevent leakage current */
 		if (!is_mb_dc_on()) {

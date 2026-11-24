@@ -686,25 +686,25 @@ void vr_power_reading(uint8_t *buffer, size_t buf_size)
 	LOG_HEXDUMP_DBG(buffer, buf_size, "VR power sensor data buffer");
 }
 
-bool set_bootstrap_element(uint8_t bootstrap_pin, uint8_t user_setting_level)
+bool set_bootstrap_element(uint8_t pin, uint8_t level)
 {
 	uint8_t change_setting_value;
-	uint8_t drive_index_level = user_setting_level;
+	uint8_t drive_index_level = level;
 	bootstrap_mapping_register bootstrap_item;
-	if (!set_bootstrap_table_and_user_settings(bootstrap_pin, &change_setting_value,
-						   drive_index_level, false, false)) {
-		LOG_ERR("set bootstrap_table[%02x]:%d failed", bootstrap_pin, drive_index_level);
+	if (!set_bootstrap_table_and_user_settings(pin, &change_setting_value, drive_index_level,
+						   false, false)) {
+		LOG_ERR("set bootstrap_table[%02x]:%d failed", pin, drive_index_level);
 		return false;
 	}
-	if (!find_bootstrap_by_rail(bootstrap_pin, &bootstrap_item)) {
-		LOG_ERR("Can't find bootstrap_item by bootstrap_pin index: 0x%02x", bootstrap_pin);
+	if (!find_bootstrap_by_rail(pin, &bootstrap_item)) {
+		LOG_ERR("Can't find bootstrap_item by bootstrap_pin index: 0x%02x", pin);
 		return false;
 	}
 	// LOG_DBG("set bootstrap_table[%2x]=%x, cpld_offsets 0x%02x change_setting_value 0x%02x",
 	// 	bootstrap_pin, drive_index_level, bootstrap_item.cpld_offsets,
 	// 	change_setting_value);
-	if (!set_bootstrap_val_to_device(bootstrap_pin, change_setting_value))
-		LOG_ERR("Can't write bootstrap[%2d]=%02x", bootstrap_pin, change_setting_value);
+	if (!set_bootstrap_val_to_device(pin, change_setting_value))
+		LOG_ERR("Can't write bootstrap[%2d]=%02x", pin, change_setting_value);
 
 	return true;
 }
@@ -798,8 +798,7 @@ void i2c_bridge_command_handler(struct k_work *work_item)
 
 void set_control_voltage_handler(struct k_work *work_item)
 {
-	plat_control_voltage *sensor_data =
-		CONTAINER_OF(work_item, plat_control_voltage, work);
+	plat_control_voltage *sensor_data = CONTAINER_OF(work_item, plat_control_voltage, work);
 	uint8_t rail = sensor_data->rail;
 	uint16_t millivolt = sensor_data->set_value;
 

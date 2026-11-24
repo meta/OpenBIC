@@ -464,7 +464,7 @@ static bool get_boot0_nuwa1_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	return ret;
 }
 
-//clang-format off
+// clang-format off
 #define VR_COMPONENT_DEF(comp_id)                                                                  \
 	{                                                                                          \
 		.enable = true, .comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,                 \

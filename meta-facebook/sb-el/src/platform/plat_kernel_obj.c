@@ -96,6 +96,8 @@ K_TIMER_DEFINE(check_ubc_delayed_timer, plat_check_ubc_delayed_timer_handler, NU
 
 void plat_check_ubc_delayed_timer_handler(struct k_timer *timer)
 {
+	ARG_UNUSED(timer);
+
 	/* FM_PLD_UBC_EN_R
 	 * 1 -> UBC is enabled
 	 * 0 -> UBC is disabled

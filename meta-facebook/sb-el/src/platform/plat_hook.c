@@ -694,9 +694,7 @@ bool post_ubc_read(sensor_cfg *cfg, void *args, int *reading)
 	ARG_UNUSED(args);
 
 	// post reading value update
-	uint8_t sensor_number = cfg->num;
-	if (!post_sensor_reading_hook_func(sensor_number))
-		LOG_ERR("pldm update sensor value failed");
+	post_sensor_reading_hook_func(cfg->num);
 
 	const sensor_val *reading_val = (sensor_val *)reading;
 
@@ -1150,9 +1148,7 @@ bool post_common_sensor_read(sensor_cfg *cfg, void *args, int *const reading)
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	ARG_UNUSED(args);
 
-	uint8_t sensor_number = cfg->num;
-	if (!post_sensor_reading_hook_func(sensor_number))
-		return false;
+	post_sensor_reading_hook_func(cfg->num);
 	return true;
 }
 
@@ -2194,12 +2190,12 @@ bool set_bootstrap_table_val_to_ioexp(void)
 
 bootstrap_user_settings_struct bootstrap_user_settings = { 0 };
 
-bool bootstrap_user_settings_get(void *bootstrap_user_settings)
+bool bootstrap_user_settings_get(void *user_settings)
 {
-	CHECK_NULL_ARG_WITH_RETURN(bootstrap_user_settings, false);
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
 
 	/* read the bootstrap_user_settings from eeprom */
-	if (!plat_eeprom_read(BOOTSTRAP_USER_SETTINGS_OFFSET, bootstrap_user_settings,
+	if (!plat_eeprom_read(BOOTSTRAP_USER_SETTINGS_OFFSET, user_settings,
 			      sizeof(struct bootstrap_user_settings_struct))) {
 		LOG_ERR("Failed to read eeprom when get bootstrap_user_settings");
 		return false;
@@ -2208,12 +2204,12 @@ bool bootstrap_user_settings_get(void *bootstrap_user_settings)
 	return true;
 }
 
-bool bootstrap_user_settings_set(void *bootstrap_user_settings)
+bool bootstrap_user_settings_set(void *user_settings)
 {
-	CHECK_NULL_ARG_WITH_RETURN(bootstrap_user_settings, false);
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
 
 	/* write the bootstrap_user_settings to eeprom */
-	if (!plat_eeprom_write(BOOTSTRAP_USER_SETTINGS_OFFSET, bootstrap_user_settings,
+	if (!plat_eeprom_write(BOOTSTRAP_USER_SETTINGS_OFFSET, user_settings,
 			       sizeof(struct bootstrap_user_settings_struct))) {
 		LOG_ERR("bootstrap Failed to write eeprom");
 		return false;
@@ -2222,12 +2218,12 @@ bool bootstrap_user_settings_set(void *bootstrap_user_settings)
 
 	return true;
 }
-bool temp_threshold_user_settings_get(void *temp_threshold_user_settings)
+bool temp_threshold_user_settings_get(void *user_settings)
 {
-	CHECK_NULL_ARG_WITH_RETURN(temp_threshold_user_settings, false);
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
 
 	/* TODO: read the temp_threshold_user_settings from eeprom */
-	if (!plat_eeprom_read(TEMP_THRESHOLD_USER_SETTINGS_OFFSET, temp_threshold_user_settings,
+	if (!plat_eeprom_read(TEMP_THRESHOLD_USER_SETTINGS_OFFSET, user_settings,
 			      sizeof(struct temp_threshold_user_settings_struct))) {
 		LOG_ERR("Failed to read eeprom when get temp_threshold_user_settings");
 		return false;

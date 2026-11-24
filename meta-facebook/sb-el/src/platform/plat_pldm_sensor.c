@@ -14214,6 +14214,10 @@ k_tid_t quick_sensor_tid;
 /* quick sensor */
 void quick_sensor_poll_handler(void *arug0, void *arug1, void *arug2)
 {
+	ARG_UNUSED(arug0);
+	ARG_UNUSED(arug1);
+	ARG_UNUSED(arug2);
+
 	k_msleep(DC_ON_DELAY_TIMMING); // delay to wait for drivers ready before start sensor polling
 	int quick_sensor_poll_interval_ms = 30;
 	uint8_t ot_warning_poll_count = 0;

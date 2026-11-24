@@ -113,12 +113,14 @@ void power_capping_syn_vr_oc_warn_limit()
 			}
 		} else if (get_vr_module() == VR_MODULE_RNS) {
 			bool get_iout_ok = (cfg->type == sensor_dev_raa229140a) ?
-					   raa229140a_get_iout_oc_warn_limit(cfg, &value) :
-					   raa228249_get_iout_oc_warn_limit(cfg, &value);
+						   raa229140a_get_iout_oc_warn_limit(cfg, &value) :
+						   raa228249_get_iout_oc_warn_limit(cfg, &value);
 			if (get_iout_ok) {
-				bool get_vout_ok = (cfg->type == sensor_dev_raa229140a) ?
-						   raa229140a_get_vout_command(cfg, 0, &voltage_value) :
-						   raa228249_get_vout_command(cfg, 0, &voltage_value);
+				bool get_vout_ok =
+					(cfg->type == sensor_dev_raa229140a) ?
+						raa229140a_get_vout_command(cfg, 0,
+									    &voltage_value) :
+						raa228249_get_vout_command(cfg, 0, &voltage_value);
 				if (get_vout_ok) {
 					float_value = voltage_value / 1000.0;
 					power_capping_info.current_threshold[i] = value;
