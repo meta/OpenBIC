@@ -74,10 +74,10 @@ typedef struct {
 
 //MEDHA0: level 2 , level3
 //MEDHA1: level 2 , level3
-adc_info_t adc_info[ADC_IDX_MAX] = { { .avg_times = 20, .ucr = 1600 },
-				     { .avg_times = 60, .ucr = 1600 },
-				     { .avg_times = 600, .ucr = 1070 },
-				     { .avg_times = 800, .ucr = 1070 } };
+adc_info_t adc_info[ADC_IDX_MAX] = { { .avg_times = 100, .ucr = 1523 },
+				     { .avg_times = 100, .ucr = 1523 },
+				     { .avg_times = 1000, .ucr = 1025 },
+				     { .avg_times = 1000, .ucr = 1025 } };
 
 static const struct device *spi_dev;
 
@@ -812,7 +812,8 @@ void ad4058_mode_init()
 	LOG_INF("ad4058 mode init done");
 }
 
-void adc_rainbow_polling_handler(void *p1, void *p2, void *p3)
+// This function must keep the void * parameter types required by the Zephyr thread callback.
+void adc_rainbow_polling_handler()
 {
 	while (1) {
 		if (!is_mb_dc_on()) {

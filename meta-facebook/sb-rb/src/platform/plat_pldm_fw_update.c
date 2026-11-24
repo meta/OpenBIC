@@ -391,7 +391,7 @@ uint32_t smbus_mode_query(void)
 
 	return err == 0 ? rd & 0x7 : err;
 }
-int sb_write_fwblock(uint32_t addr, uint32_t *data, uint32_t data_len)
+int sb_write_fwblock(uint32_t addr, const uint32_t *data, uint32_t data_len)
 {
 	//smbus max payload for a transaction is 32
 	uint8_t buf[SMBUS_MAX_PKT_LEN] = { 0 };
@@ -413,13 +413,13 @@ int sb_write_fwblock(uint32_t addr, uint32_t *data, uint32_t data_len)
 			      buf[MSG_PKT_LEN_OFFSET] + PKT_LEN_BYTE_SZ);
 }
 
-int iris_data_write(uint8_t *data, uint32_t data_size)
+int iris_data_write(const uint8_t *data, uint32_t data_size)
 {
 	int idx = 0;
 	int err = 0;
 	uint32_t size = data_size;
 	uint32_t dst_addr = HAMSA_BOOT1_ASIC_MEM_ADDR;
-	uint8_t *data_buf = data;
+	const uint8_t *data_buf = data;
 	uint8_t rd;
 	uint32_t write_size = MAX_DATA_PKT_SIZE;
 	while (size > 0) {
@@ -438,7 +438,7 @@ int iris_data_write(uint8_t *data, uint32_t data_size)
 		// if error,  retry up to MAX_RETRIES
 		int tries = MAX_RETRIES;
 		while (tries) {
-			err = sb_write_fwblock(write_addr, (uint32_t *)(data_buf + offset),
+			err = sb_write_fwblock(write_addr, (const uint32_t *)(data_buf + offset),
 					       write_size);
 			if (err == true)
 				break;
@@ -485,7 +485,13 @@ void get_fw_version_boot0_from_asic()
 	i2c_msg.tx_len = 1;
 	i2c_msg.rx_len = 10;
 	i2c_msg.data[0] = ASIC_VERSION_BYTE;
-	i2c_master_read_without_error_log(&i2c_msg, I2C_MAX_RETRY);
+	if (i2c_master_read_without_error_log(&i2c_msg, I2C_MAX_RETRY) != 0) {
+		// fail so set version to all 0
+		version_boot0[BOOT0_HAMSA] = 0;
+		version_boot0[BOOT0_MEDHA0] = 0;
+		version_boot0[BOOT0_MEDHA1] = 0;
+		return;
+	}
 
 	uint32_t data_p = i2c_msg.data[8] << 16 | i2c_msg.data[7] << 8 | i2c_msg.data[6];
 	if (data_p) {
@@ -494,7 +500,13 @@ void get_fw_version_boot0_from_asic()
 	i2c_msg.tx_len = 1;
 	i2c_msg.rx_len = 5;
 	i2c_msg.data[0] = CIP_VERSION_BYTE;
-	i2c_master_read_without_error_log(&i2c_msg, I2C_MAX_RETRY);
+	if (i2c_master_read_without_error_log(&i2c_msg, I2C_MAX_RETRY) != 0) {
+		// fail so set version to all 0
+		version_boot0[BOOT0_HAMSA] = 0;
+		version_boot0[BOOT0_MEDHA0] = 0;
+		version_boot0[BOOT0_MEDHA1] = 0;
+		return;
+	}
 
 	uint32_t data_cip = i2c_msg.data[1] << 16 | i2c_msg.data[2] << 8 | i2c_msg.data[3];
 	if (data_cip) {
@@ -616,12 +628,18 @@ static bool get_boot0_medha1_fw_version(void *info_p, uint8_t *buf, uint8_t *len
 //clang-format off
 #define VR_COMPONENT_DEF(comp_id)                                                                  \
 	{                                                                                          \
-		.enable = true, .comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,                 \
-		.comp_identifier = comp_id, .comp_classification_index = 0x00,                     \
-		.pre_update_func = pldm_pre_vr_update, .update_func = plat_pldm_vr_update,         \
-		.pos_update_func = pldm_post_vr_update, .inf = COMP_UPDATE_VIA_I2C,                \
-		.activate_method = COMP_ACT_AC_PWR_CYCLE, .self_act_func = NULL,                   \
-		.get_fw_version_fn = get_vr_fw_version, .self_apply_work_func = NULL,              \
+		.enable = true,                                                                    \
+		.comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,                                 \
+		.comp_identifier = comp_id,                                                        \
+		.comp_classification_index = 0x00,                                                 \
+		.pre_update_func = pldm_pre_vr_update,                                             \
+		.update_func = plat_pldm_vr_update,                                                \
+		.pos_update_func = pldm_post_vr_update,                                            \
+		.inf = COMP_UPDATE_VIA_I2C,                                                        \
+		.activate_method = COMP_ACT_AC_PWR_CYCLE,                                          \
+		.self_act_func = NULL,                                                             \
+		.get_fw_version_fn = get_vr_fw_version,                                            \
+		.self_apply_work_func = NULL,                                                      \
 		.comp_version_str = NULL,                                                          \
 	}
 // clang-format on
@@ -723,7 +741,7 @@ uint8_t plat_pldm_query_device_identifiers(const uint8_t *buf, uint16_t len, uin
 	// Set the device id for sd bic
 	uint8_t deviceId[PLDM_PCI_DEVICE_ID_LENGTH] = { 0x00, 0x00 };
 
-	uint8_t slotNumber = plat_get_eid() / 10;
+	uint8_t slotNumber = get_mmc_slot() + 1;
 	uint8_t slot[PLDM_ASCII_MODEL_NUMBER_SHORT_STRING_LENGTH] = { (char)(slotNumber + '0') };
 
 	uint8_t total_size_of_iana_descriptor =
