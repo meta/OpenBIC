@@ -107,6 +107,17 @@ jobs:
         cd OpenBIC 
         west update
  
+    # The cache restores ./zephyr as it was when the cache was saved, which
+    # is after a previous run applied its patches, and `west update` keeps
+    # those working-tree changes. Start from the pinned revisions so this
+    # run applies exactly the patches in this checkout.
+    - name: Reset Kernel Trees
+      run: |
+        for tree in zephyr zephyr_nuvoton; do
+          git -C "$tree" reset --hard --quiet
+          git -C "$tree" clean -fdx --quiet
+        done
+
     - name: Apply Kernel Patches
       run: |
         ${{ github.event.repository.name }}/scripts/build/apply_patches.py --source="${{ github.event.repository.name }}/fix_patch/aspeed-main-v2.6.0_641ac3b4d956f2d237c109526c017fdee4715bfb/" --destination="zephyr"

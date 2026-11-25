@@ -76,13 +76,27 @@ def gather_patches(source_path) -> list:
     return patches
 
 
+def run_git_apply(patch, destination_path, reverse=False) -> bool:
+    """
+    Run `git apply` for one patch against the destination repo.
+
+    :return: True if git applied (or reverted) the patch cleanly.
+    :rtype: bool
+    """
+    command = ["git", "apply", "--unsafe-paths"]
+    if reverse:
+        command.append("-R")
+    command += [patch, "--directory=" + destination_path]
+    return subprocess.run(command).returncode == 0
+
+
 def patches_unwind(applied_patch_list, destination_path):
     """
-    Attempt to remove the patches in the order they are found in patch_list.
+    Attempt to remove the applied patches, most recent first.
     If this function fails then the repo may be left in an invalid state.
 
-    :param patch_list: List of paths to the patches to undo
-    :type patch_list: list
+    :param applied_patch_list: Paths of the applied patches, most recent first
+    :type applied_patch_list: list
     :param destination_path: Path to the repo to revert the patches
     :type destination_path: str
     """
@@ -90,36 +104,19 @@ def patches_unwind(applied_patch_list, destination_path):
     print("Attempting to remove applied patches in order...")
 
     for patch in applied_patch_list:
-        command = [
-            "git",
-            "apply",
-            "--unsafe-paths",
-            "-R",
-            patch,
-            "--directory=",
-            destination_path
-        ]
-
         print("Attempting to revert patch: " + patch)
-
-        return_code = subprocess.run(command)
-        print(return_code)
-
-        if return_code != 0:
+        if not run_git_apply(patch, destination_path, reverse=True):
             print("FAILED TO REVERT PATCH!")
             print("The destination repo is probably now in a bad state.")
             print("It may require some manual cleanup.")
-            patches_unwind(applied_patch_list, destination_path)
             sys.exit(255)
-        else:
-            applied_patch_list.append(patch)
 
 
 def apply_patches(patch_list, destination_path):
     """
     Applies patches to the Git repo in the order patch_list contains them.
-    If applying a patch fails this function will attempt to clean up the repo
-    state by rolling back the patches using `git apply -R`
+    If applying a patch fails, this function rolls back the patches it
+    already applied using `git apply -R` and exits non-zero.
 
     :param patch_list: The paths of all patches to apply.
     :type patch_list: list (str)
@@ -131,26 +128,11 @@ def apply_patches(patch_list, destination_path):
     applied_patch_list = []
 
     for patch in patch_list:
-        command = [
-            "git",
-            "apply",
-            "--unsafe-paths",
-            patch,
-            "--directory=" + destination_path
-        ]
-
         print("Attempting to apply patch: " + patch)
-
-        try:
-            return_code = subprocess.run(command)
-        except subprocess.CalledProcessError as grepexc:
-            print("error code", grepexc.returncode, grepexc.output)
-
-            if return_code != 0:
-                print("FAILED TO APPLY PATCH!")
-                patches_unwind(applied_patch_list, destination_path)
-                sys.exit(255)
-
+        if not run_git_apply(patch, destination_path):
+            print("FAILED TO APPLY PATCH: " + patch)
+            patches_unwind(applied_patch_list, destination_path)
+            sys.exit(255)
         applied_patch_list.insert(0, patch)
 
 
@@ -176,6 +158,8 @@ def attempt_patch(source_path, destination_path):
 
 
 if __name__ == '__main__':
+    # Line-buffer stdout so our progress lines interleave with git's stderr.
+    sys.stdout.reconfigure(line_buffering=True)
     parser = argparse.ArgumentParser(
         description="Apply the patches specified in the source directory "
         "to the destination git repository. Patches will be applied in "
