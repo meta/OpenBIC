@@ -20,6 +20,7 @@
 #define VR_FAST_OCP_REG 0x46
 #define VR_SLOW_OCP_REG 0xEA
 #define VR_UVP_REG 0x44
+#define VR_RAA229140A_UVP_REG 0x59
 #define VR_OVP_REG 0x40
 #define VR_VOUT_MAX_REG 0x24
 #define VR_VOUT_REG 0x21
@@ -75,6 +76,7 @@ extern const uint8_t vr_mps_test_mode_table_size;
 extern const uint8_t vr_mps_normal_mode_table_size;
 
 bool update_vr_reg(uint8_t rail, uint8_t reg, uint16_t val);
+bool get_vr_test_mode_reg_value(uint8_t rail, uint8_t reg, uint16_t *val);
 bool get_vr_test_mode_flag(void);
 void vr_test_mode_enable(bool onoff);
 void init_vr_test_mode_polling(void);

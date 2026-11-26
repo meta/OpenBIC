@@ -26,7 +26,7 @@
 static bool cmd_is_dc_on(const struct shell *shell)
 {
 	if (!is_mb_dc_on()) {
-		shell_warn(shell, "please iris power on first");
+		shell_warn(shell, "please arke power on first");
 		return false;
 	}
 
@@ -177,12 +177,19 @@ void cmd_vr_test_mode_show_val(const struct shell *shell, size_t argc, char **ar
 
 static int get_vr_reg_to_int(uint8_t vr_rail, uint8_t reg)
 {
-	uint8_t data[2] = { 0 };
-	if (!get_raw_data_from_sensor_id(vr_rail_table[vr_rail].sensor_id, reg, data, 2))
+	uint16_t val = 0;
+	if (!get_vr_test_mode_reg_value(vr_rail, reg, &val))
 		return -1;
 
-	uint16_t raw_val = (data[1] << 8) | data[0];
-	return (int)raw_val;
+	return (int)val;
+}
+
+static uint8_t get_vr_uvp_reg(uint8_t vr_rail)
+{
+	uint8_t sensor_id = vr_rail_table[vr_rail].sensor_id;
+	const sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+
+	return (cfg && cfg->type == sensor_dev_raa229140a) ? VR_RAA229140A_UVP_REG : VR_UVP_REG;
 }
 
 void cmd_vr_test_mode_show_real(const struct shell *shell, size_t argc, char **argv)
@@ -205,7 +212,7 @@ void cmd_vr_test_mode_show_real(const struct shell *shell, size_t argc, char **a
 				uint16_t uvp = 0;
 				uint16_t ovp = 0;
 				if (get_vr_fixed_uvp_ovp_enable(i)) {
-					uvp = get_vr_reg_to_int(i, VR_UVP_REG);
+					uvp = get_vr_reg_to_int(i, get_vr_uvp_reg(i));
 					ovp = get_vr_reg_to_int(i, VR_OVP_REG);
 				} else if (!get_vr_offset_uvp_ovp(i, &uvp, &ovp))
 					shell_error(shell, "get vr %d uvp/ovp fail", i);
@@ -243,13 +250,23 @@ void cmd_vr_test_mode_show_real(const struct shell *shell, size_t argc, char **a
 		// not include P3V3
 		for (uint8_t i = 0; i <= VR_RAIL_E_ASIC_P0V75_NUWA1_VDD; i++) {
 			uint8_t *rail_name = NULL;
-			get_vr_mp29816a_reg(i, &uvp, UVP);
-			get_vr_mp29816a_reg(i, &vout_max, VOUT_MAX);
-			get_vr_mp29816a_reg(i, &vout_command, VOUT_COMMAND);
-			get_vr_mp29816a_reg(i, &vout_offset, VOUT_OFFSET);
-			get_vr_mp29816a_reg(i, &total_ocp, TOTAL_OCP);
-			get_vr_mp29816a_reg(i, &ovp_1, OVP_1);
-			get_vr_mp29816a_reg(i, &ovp_2, OVP_2);
+			if (!fab2_mps_ic_second_source) {
+				get_vr_mp29816a_reg(i, &uvp, UVP);
+				get_vr_mp29816a_reg(i, &vout_max, VOUT_MAX);
+				get_vr_mp29816a_reg(i, &vout_command, VOUT_COMMAND);
+				get_vr_mp29816a_reg(i, &vout_offset, VOUT_OFFSET);
+				get_vr_mp29816a_reg(i, &total_ocp, TOTAL_OCP);
+				get_vr_mp29816a_reg(i, &ovp_1, OVP_1);
+				get_vr_mp29816a_reg(i, &ovp_2, OVP_2);
+			} else {
+				get_vr_mp29526_reg(i, &uvp, UVP);
+				get_vr_mp29526_reg(i, &vout_max, VOUT_MAX);
+				get_vr_mp29526_reg(i, &vout_command, VOUT_COMMAND);
+				get_vr_mp29526_reg(i, &vout_offset, VOUT_OFFSET);
+				get_vr_mp29526_reg(i, &total_ocp, TOTAL_OCP);
+				get_vr_mp29526_reg(i, &ovp_1, OVP_1);
+				get_vr_mp29526_reg(i, &ovp_2, OVP_2);
+			}
 			if (test_mode) {
 				// test mode
 				snprintf(ovp2_str, sizeof(ovp2_str), "no action");

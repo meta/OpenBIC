@@ -65,7 +65,8 @@ __weak void plat_pldm_sensor_poll_post()
 
 __weak void plat_pldm_sensor_change_poll_interval(int thread_id, uint32_t *poll_interval_ms)
 {
-	return;
+	ARG_UNUSED(thread_id);
+	ARG_UNUSED(poll_interval_ms);
 }
 
 bool pldm_sensor_is_interval_ready(pldm_sensor_info *pldm_sensor_list, uint8_t polling_time_config)
@@ -399,8 +400,7 @@ int pldm_polling_sensor_reading_optional_check(pldm_sensor_info *pldm_snr_list,
 	CHECK_NULL_ARG_WITH_RETURN(pldm_snr_list, -1);
 
 	if (pldm_snr_list->pldm_sensor_cfg.cache_status == PLDM_SENSOR_INITIALIZING) {
-		if (pldm_sensor_polling_pre_check(&pldm_sensor_list[thread_id][sensor_num],
-						  sensor_num) != 0) {
+		if (pldm_sensor_polling_pre_check(pldm_snr_list, sensor_num) != 0) {
 			return -1;
 		}
 	}
@@ -438,7 +438,7 @@ void pldm_sensor_polling_handler(void *arug0, void *arug1, void *arug2)
 	ARG_UNUSED(arug2);
 
 	int ret = 0, sensor_num = 0;
-	int thread_id = (int)arug0;
+	int thread_id = POINTER_TO_INT(arug0);
 	int pldm_sensor_count = 0;
 	uint32_t poll_interval_ms = PLDM_SENSOR_POLL_TIME_DEFAULT_MS;
 	uint8_t is_need_check = false;
@@ -488,14 +488,18 @@ void pldm_sensor_polling_handler(void *arug0, void *arug1, void *arug2)
 			if (pldm_sensor_thread_list[thread_id].poll_interval_ms != 0) {
 				if (pldm_polling_sensor_reading_optional_check(
 					    &pldm_sensor_list[thread_id][sensor_num],
-					    pldm_sensor_count, thread_id, sensor_num, is_need_check,
-					    is_interval_using_ms) != 0) {
+					    pldm_sensor_count, thread_id,
+					    pldm_sensor_list[thread_id][sensor_num]
+						    .pldm_sensor_cfg.num,
+					    is_need_check, is_interval_using_ms) != 0) {
 					continue;
 				}
 			} else {
 				if (pldm_polling_sensor_reading(
 					    &pldm_sensor_list[thread_id][sensor_num],
-					    pldm_sensor_count, thread_id, sensor_num) != 0) {
+					    pldm_sensor_count, thread_id,
+					    pldm_sensor_list[thread_id][sensor_num]
+						    .pldm_sensor_cfg.num) != 0) {
 					continue;
 				}
 			}
@@ -522,17 +526,17 @@ void pldm_sensor_poll_thread_init()
 	LOG_INF("Init PLDM sensor monitor thread");
 
 	for (i = 0; i < MAX_SENSOR_THREAD_ID; i++) {
+#ifdef ENABLE_PLATFORM_PROVIDES_PLDM_SENSOR_STACKS
 		k_thread_stack_t *stack = plat_get_pldm_sensor_stack(i);
 		size_t stack_size = plat_get_pldm_sensor_stack_size(i);
 
-#ifdef ENABLE_PLATFORM_PROVIDES_PLDM_SENSOR_STACKS
 		if (stack == NULL || stack_size == 0) {
 			LOG_WRN("Invalid stack for thread %d, skipping", i);
 			continue;
 		}
 #else
-		stack = pldm_sensor_poll_stacks[i];
-		stack_size = K_THREAD_STACK_SIZEOF(pldm_sensor_poll_stacks[i]);
+		k_thread_stack_t *stack = pldm_sensor_poll_stacks[i];
+		size_t stack_size = K_THREAD_STACK_SIZEOF(pldm_sensor_poll_stacks[i]);
 #endif
 
 		LOG_INF("Creating thread %d (%s) with stack size %zu", i,

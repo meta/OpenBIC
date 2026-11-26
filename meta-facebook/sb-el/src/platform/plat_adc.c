@@ -77,8 +77,8 @@ typedef struct {
 //NUWA1: level 2 , level3
 adc_info_t adc_info[ADC_IDX_MAX] = { { .avg_times = 20, .ucr = 1600 },
 				     { .avg_times = 60, .ucr = 1600 },
-				     { .avg_times = 600, .ucr = 1070 },
-				     { .avg_times = 800, .ucr = 1070 } };
+				     { .avg_times = 500, .ucr = 1070 },
+				     { .avg_times = 500, .ucr = 1070 } };
 
 static const struct device *spi_dev;
 
@@ -822,6 +822,10 @@ void ad4058_mode_init()
 
 void adc_electra_polling_handler(void *p1, void *p2, void *p3)
 {
+	ARG_UNUSED(p1);
+	ARG_UNUSED(p2);
+	ARG_UNUSED(p3);
+
 	while (1) {
 		/* Pull CS1 low before DC on to prevent leakage current */
 		if (!is_mb_dc_on()) {

@@ -27,7 +27,9 @@
 #include "plat_hook.h"
 #include "mp2971.h"
 #include "mp29816a.h"
+#include "mp29526.h"
 #include "raa228249.h"
+#include "raa229140a.h"
 #include "drivers/i2c_npcm4xx.h"
 #include "util_spi.h"
 #include "plat_gpio.h"
@@ -462,7 +464,7 @@ static bool get_boot0_nuwa1_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	return ret;
 }
 
-//clang-format off
+// clang-format off
 #define VR_COMPONENT_DEF(comp_id)                                                                  \
 	{                                                                                          \
 		.enable = true, .comp_classification = COMP_CLASS_TYPE_DOWNSTREAM,                 \
@@ -772,6 +774,12 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 			goto err;
 		}
 		break;
+	case sensor_dev_mp29526:
+		if (!mp29526_get_fw_version(cfg->port, cfg->target_addr, &version)) {
+			LOG_ERR("The VR MPS29526 version reading failed");
+			goto err;
+		}
+		break;
 	case sensor_dev_raa228249:
 		if (!raa228249_get_crc(cfg->port, cfg->target_addr, &version)) {
 			LOG_ERR("The VR RAA228249 version reading failed");
@@ -783,6 +791,17 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 			goto err;
 		}
 		break;
+	case sensor_dev_raa229140a:
+		if (!raa229140a_get_crc(cfg->port, cfg->target_addr, &version)) {
+			LOG_ERR("The VR RAA229140A version reading failed");
+			goto err;
+		}
+		if (raa229140a_get_remaining_wr(cfg->port, cfg->target_addr, (uint8_t *)&remain) <
+		    0) {
+			LOG_ERR("The VR RAA229140A remaining write count reading failed");
+			goto err;
+		}
+		break;
 	default:
 		LOG_ERR("Unsupport VR type(%d)", cfg->type);
 		goto err;
@@ -790,7 +809,8 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 
 	if (cfg->type == sensor_dev_mp2891 || cfg->type == sensor_dev_mp29816a)
 		version = sys_cpu_to_be16(version);
-	else if (cfg->type == sensor_dev_raa228249 || cfg->type == sensor_dev_mp2971)
+	else if (cfg->type == sensor_dev_raa228249 || cfg->type == sensor_dev_raa229140a ||
+		 cfg->type == sensor_dev_mp2971 || cfg->type == sensor_dev_mp29526)
 		version = sys_cpu_to_be32(version);
 	else
 		LOG_ERR("Unsupport VR type(%d)", cfg->type);
@@ -818,7 +838,8 @@ static bool get_vr_fw_version(void *info_p, uint8_t *buf, uint8_t *len)
 	if (cfg->type == sensor_dev_mp2891 || cfg->type == sensor_dev_mp29816a) {
 		*len += bin2hex((uint8_t *)&version, 2, buf_p, 4);
 		buf_p += 4;
-	} else if (cfg->type == sensor_dev_raa228249 || cfg->type == sensor_dev_mp2971) {
+	} else if (cfg->type == sensor_dev_raa228249 || cfg->type == sensor_dev_raa229140a ||
+		   cfg->type == sensor_dev_mp2971 || cfg->type == sensor_dev_mp29526) {
 		*len += bin2hex((uint8_t *)&version, 4, buf_p, 8);
 		buf_p += 8;
 	} else {

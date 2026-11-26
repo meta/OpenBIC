@@ -217,9 +217,9 @@ void init_plat_config()
 	init_board_stage();
 	init_tmp_vendor_type();
 	init_vr_vendor_type();
-	change_sensor_cfg(asic_board_id, tmp_module, vr_module, ubc_module, board_rev_id);
 	// cpld fru offset 0: slot
 	plat_cpld_eerprom_read(&mmc_slot, MMC_SLOT_USER_SETTING_OFFSET, 1);
+	change_sensor_cfg(asic_board_id, tmp_module, vr_module, ubc_module, board_rev_id);
 	// mmc slot 1-4 * 0x0A
 	uint8_t init_plat_eid = ((get_mmc_slot() + 1) * MCTP_DEFAULT_ENDPOINT);
 	plat_set_eid(init_plat_eid);

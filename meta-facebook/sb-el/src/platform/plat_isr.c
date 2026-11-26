@@ -33,8 +33,27 @@
 #include "plat_util.h"
 #include "plat_class.h"
 #include "plat_power_capping.h"
+#include "plat_user_setting.h"
+#include "plat_vr_test_mode.h"
+#include "plat_pldm_sensor.h"
 
 LOG_MODULE_REGISTER(plat_isr);
+
+uint8_t pwr_steps_on_flag = 0;
+
+void set_pwr_steps_on_flag(uint8_t flag_value)
+{
+	pwr_steps_on_flag = flag_value;
+	//check value
+	if (pwr_steps_on_flag != flag_value)
+		LOG_ERR("set pwr_steps_on_flag failed, now pwr_steps_on_flag = %d",
+			pwr_steps_on_flag);
+}
+
+uint8_t get_pwr_steps_on_flag(void)
+{
+	return pwr_steps_on_flag;
+}
 
 void ISR_GPIO_ALL_VR_PM_ALERT_R_N()
 {
@@ -46,8 +65,8 @@ void ISR_GPIO_ALL_VR_PM_ALERT_R_N()
 void ISR_GPIO_FM_PLD_UBC_EN_R()
 {
 	// check step on setting flag
-	// if (get_pwr_steps_on_flag() == 1)
-	// 	return;
+	if (get_pwr_steps_on_flag() == 1)
+		return;
 
 	LOG_INF("FM_PLD_UBC_EN_R = %d\nDC ON", gpio_get(FM_PLD_UBC_EN_R));
 
@@ -104,6 +123,8 @@ void ISR_GPIO_RST_ARKE_PWR_ON_PLD_R1_N()
 	if (gpio_get(RST_ARKE_PWR_ON_PLD_R1_N)) {
 		plat_switch_pin_a12(false); /* HIGH -> A12 = SPIP1_CS */
 		ioexp_init();
+		/* Retry FAB2 VR address detection after the VRs become accessible. */
+		refresh_fab2_mps_nuwa_addr();
 		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
 			// Ensure U200053 is initialized before initializing U200051.
 			init_U200052_IO();
@@ -117,15 +138,19 @@ void ISR_GPIO_RST_ARKE_PWR_ON_PLD_R1_N()
 		add_sync_oc_warn_to_work();
 		// if board id == EVB , ctrl fan pwm
 		if (get_asic_board_id() == ASIC_BOARD_ID_EVB) {
-			LOG_INF("dc on, set fan pwm 65");
+			LOG_INF("dc on, set fan pwm 100");
 			init_pwm_dev();
-			ast_pwm_set(65, PWM_PORT2);
-			ast_pwm_set(65, PWM_PORT6);
+			ast_pwm_set(100, PWM_PORT2);
+			ast_pwm_set(100, PWM_PORT6);
 		}
 		// when dc on clear cpld polling alert status
 		uint8_t err_type = CPLD_UNEXPECTED_VAL_TRIGGER_CAUSE;
 		reset_error_log_states(err_type);
+
+		/* getting VR VOUT settings */
 		vr_vout_offset_get_init();
+		vr_vout_default_settings_init();
+		vr_vout_user_settings_init();
 		//set perm vout command when DC on
 		if (!set_all_vout_command())
 			LOG_ERR("set all vout command fail!");
@@ -140,22 +165,6 @@ void ISR_GPIO_RST_ARKE_PWR_ON_PLD_R1_N()
 			ast_pwm_set(0, PWM_PORT6);
 		}
 	}
-}
-
-uint8_t pwr_steps_on_flag = 0;
-
-void set_pwr_steps_on_flag(uint8_t flag_value)
-{
-	pwr_steps_on_flag = flag_value;
-	//check value
-	if (pwr_steps_on_flag != flag_value)
-		LOG_ERR("set pwr_steps_on_flag failed, now pwr_steps_on_flag = %d",
-			pwr_steps_on_flag);
-}
-
-uint8_t get_pwr_steps_on_flag(void)
-{
-	return pwr_steps_on_flag;
 }
 
 void ISR_GPIO_SMB_HAMSA_MMC_LVC33_ALERT_N()
@@ -175,7 +184,7 @@ void ISR_GPIO_SMB_HAMSA_MMC_LVC33_ALERT_N()
 
 	struct pldm_addsel_data smb_hamsa_sel_msg = { 0 };
 	smb_hamsa_sel_msg.assert_type = LOG_ASSERT;
-	smb_hamsa_sel_msg.event_type = ASIC_MODULE_ERROR; //ASIC_MODULE_ERROR;
+	smb_hamsa_sel_msg.event_type = ARKE_FAULT;
 	smb_hamsa_sel_msg.event_data_1 = HAMSA_SMB_ERR_EVENT_HEADER;
 	smb_hamsa_sel_msg.event_data_2 = data[1]; // 123
 	smb_hamsa_sel_msg.event_data_3 = data[2]; // 124

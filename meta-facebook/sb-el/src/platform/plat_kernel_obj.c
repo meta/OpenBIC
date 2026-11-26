@@ -15,7 +15,6 @@
  */
 
 #include "plat_kernel_obj.h"
-#include "plat_user_setting.h"
 #include "plat_gpio.h"
 #include "plat_log.h"
 #include "plat_hook.h"
@@ -89,16 +88,6 @@ static void clk_apll_check_work_handler(struct k_work *work)
 	start_clk_apll_check_work();
 }
 
-/* work for getting VR VOUT settings */
-void get_vr_vout_handler(struct k_work *work);
-K_WORK_DEFINE(vr_vout_work, get_vr_vout_handler);
-
-void get_vr_vout_handler(struct k_work *work)
-{
-	vr_vout_default_settings_init();
-	vr_vout_user_settings_init();
-}
-
 /* Timer for dc status checking
 We expect UBC ON will trigger DC ON. */
 bool ubc_status = false; // "ubc_enabled_delayed_status" in rainbow
@@ -107,16 +96,14 @@ K_TIMER_DEFINE(check_ubc_delayed_timer, plat_check_ubc_delayed_timer_handler, NU
 
 void plat_check_ubc_delayed_timer_handler(struct k_timer *timer)
 {
+	ARG_UNUSED(timer);
+
 	/* FM_PLD_UBC_EN_R
 	 * 1 -> UBC is enabled
 	 * 0 -> UBC is disabled
 	 */
 	bool is_ubc_enabled = (gpio_get(FM_PLD_UBC_EN_R) == GPIO_HIGH);
 	ubc_status = is_ubc_enabled;
-
-	if (is_ubc_enabled == true) {
-		k_work_submit(&vr_vout_work);
-	}
 }
 
 void plat_update_ubc_status(void)

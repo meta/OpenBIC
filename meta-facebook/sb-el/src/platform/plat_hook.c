@@ -21,7 +21,9 @@
 #include "pmbus.h"
 #include "mp2971.h"
 #include "mp29816a.h"
+#include "mp29526.h"
 #include "raa228249.h"
+#include "raa229140a.h"
 #include "tmp431.h"
 #include "emc1413.h"
 #include "plat_gpio.h"
@@ -333,8 +335,14 @@ bootstrap_mapping_register bootstrap_table[] = {
 	  0x01, false },
 	{ STRAP_INDEX_PLD_OWL_W_ATPG_MODE_L, STRAP_TYPE_CPLD, OWL_CONTROL_IO, "PLD_OWL_W_ATPG_MODE_L", 0, 1,
 	  0x01, 0x01, false },
-	{ STRAP_INDEX_OWL_E_JTAG_MUX_PLD_SEL_0_3, STRAP_TYPE_CPLD, OWL_JTAG_SEL,
-	  "OWL_E_JTAG_MUX_PLD_SEL_0_3", 4, 4, 0x0, 0x0, true },
+	{ STRAP_INDEX_OWL_E_JTAG_MUX_PLD_SEL_00, STRAP_TYPE_GPIO, FM_OWL_E_JTAG_MUX_SEL_00,
+	  "OWL_E_JTAG_MUX_PLD_SEL_00", 0, 1, 0x0, 0x0, false },
+	{ STRAP_INDEX_OWL_E_JTAG_MUX_PLD_SEL_01, STRAP_TYPE_GPIO, FM_OWL_E_JTAG_MUX_SEL_01,
+	  "OWL_E_JTAG_MUX_PLD_SEL_01", 0, 1, 0x0, 0x0, false },
+	{ STRAP_INDEX_OWL_E_JTAG_MUX_PLD_SEL_02, STRAP_TYPE_GPIO, FM_OWL_E_JTAG_MUX_SEL_02,
+	  "OWL_E_JTAG_MUX_PLD_SEL_02", 0, 1, 0x0, 0x0, false },
+	{ STRAP_INDEX_OWL_E_JTAG_MUX_PLD_SEL_03, STRAP_TYPE_CPLD, OWL_JTAG_SEL,
+	  "OWL_E_JTAG_MUX_PLD_SEL_03", 4, 1, 0x0, 0x0, false },
 	{ STRAP_INDEX_OWL_W_JTAG_MUX_PLD_SEL_0_3, STRAP_TYPE_CPLD, OWL_JTAG_SEL,
 	  "OWL_W_JTAG_MUX_PLD_SEL_0_3", 0, 4, 0x0, 0x0, true },
 	{ STRAP_INDEX_OWL_E_UART_MUX_PLD_SEL_0_2, STRAP_TYPE_CPLD, OWL_UART_SEL,
@@ -344,6 +352,10 @@ bootstrap_mapping_register bootstrap_table[] = {
 	{ STRAP_INDEX_OWL_E_DVT_ENABLE, STRAP_TYPE_CPLD, OWL_DVT_ENABLE, "OWL_E_DVT_ENABLE", 1, 1, 0x0, 0x0,
 	  false },
 	{ STRAP_INDEX_OWL_W_DVT_ENABLE, STRAP_TYPE_CPLD, OWL_DVT_ENABLE, "OWL_W_DVT_ENABLE", 0, 1, 0x0, 0x0,
+	  false },
+	{ STRAP_INDEX_NUWA1_STANDALONE_MODE_R, STRAP_TYPE_CPLD, STANDALONE_MODE, "NUWA1_STANDALONE_MODE_R", 7, 1, 0x0, 0x0,
+	  false },
+	{ STRAP_INDEX_NUWA0_STANDALONE_MODE_R, STRAP_TYPE_CPLD, STANDALONE_MODE, "NUWA0_STANDALONE_MODE_R", 6, 1, 0x0, 0x0,
 	  false },
 	{ STRAP_INDEX_OWL_E_BOOT_SOURCE_0_7, STRAP_TYPE_IOEXP_PCA6416A, PCA6414A_OUTPUT_PORT_0,
 	  "OWL_E_BOOT_SOURCE_0_7", 0, 8, 0x0, 0x0, false },
@@ -682,9 +694,7 @@ bool post_ubc_read(sensor_cfg *cfg, void *args, int *reading)
 	ARG_UNUSED(args);
 
 	// post reading value update
-	uint8_t sensor_number = cfg->num;
-	if (!post_sensor_reading_hook_func(sensor_number))
-		LOG_ERR("pldm update sensor value failed");
+	post_sensor_reading_hook_func(cfg->num);
 
 	const sensor_val *reading_val = (sensor_val *)reading;
 
@@ -953,10 +963,23 @@ bool plat_get_vr_status(uint8_t rail, uint8_t vr_status_rail, uint16_t *vr_statu
 			goto err;
 		}
 		break;
+	case sensor_dev_mp29526:
+		if (!mp29526_get_vr_status(cfg, pre_proc_args->vr_page, pmbus_reg_id, vr_status)) {
+			LOG_ERR("The VR MPS29526 vr status reading failed");
+			goto err;
+		}
+		break;
 	case sensor_dev_raa228249:
 		if (!raa228249_get_vr_status(cfg, pre_proc_args->vr_page, pmbus_reg_id,
 					     vr_status)) {
 			LOG_ERR("The VR RAA228249 vr status reading failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_raa229140a:
+		if (!raa229140a_get_vr_status(cfg, pre_proc_args->vr_page, pmbus_reg_id,
+					      vr_status)) {
+			LOG_ERR("The VR RAA229140A vr status reading failed");
 			goto err;
 		}
 		break;
@@ -1013,9 +1036,21 @@ bool plat_clear_vr_status(uint8_t rail)
 			goto err;
 		}
 		break;
+	case sensor_dev_mp29526:
+		if (!mp29526_clear_vr_status(cfg, pre_proc_args->vr_page)) {
+			LOG_ERR("The VR MPS29526 vr status clear failed");
+			goto err;
+		}
+		break;
 	case sensor_dev_raa228249:
 		if (!raa228249_clear_vr_status(cfg, pre_proc_args->vr_page)) {
 			LOG_ERR("The VR RAA228249 vr status clear failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_raa229140a:
+		if (!raa229140a_clear_vr_status(cfg, pre_proc_args->vr_page)) {
+			LOG_ERR("The VR RAA229140A vr status clear failed");
 			goto err;
 		}
 		break;
@@ -1069,9 +1104,21 @@ bool plat_get_vout_command(uint8_t rail, uint16_t *millivolt)
 			goto err;
 		}
 		break;
+	case sensor_dev_mp29526:
+		if (!mp29526_get_vout_command(cfg, pre_proc_args->vr_page, millivolt)) {
+			LOG_ERR("The VR MPS29526 vout reading failed");
+			goto err;
+		}
+		break;
 	case sensor_dev_raa228249:
 		if (!raa228249_get_vout_command(cfg, pre_proc_args->vr_page, millivolt)) {
 			LOG_ERR("The VR RAA228249 vout reading failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_raa229140a:
+		if (!raa229140a_get_vout_command(cfg, pre_proc_args->vr_page, millivolt)) {
+			LOG_ERR("The VR RAA229140A vout reading failed");
 			goto err;
 		}
 		break;
@@ -1101,9 +1148,7 @@ bool post_common_sensor_read(sensor_cfg *cfg, void *args, int *const reading)
 	CHECK_NULL_ARG_WITH_RETURN(cfg, false);
 	ARG_UNUSED(args);
 
-	uint8_t sensor_number = cfg->num;
-	if (!post_sensor_reading_hook_func(sensor_number))
-		return false;
+	post_sensor_reading_hook_func(cfg->num);
 	return true;
 }
 
@@ -1151,9 +1196,21 @@ bool plat_set_vout_command(uint8_t rail, uint16_t *millivolt, bool is_perm)
 			goto err;
 		}
 		break;
+	case sensor_dev_mp29526:
+		if (!mp29526_set_vout_command(cfg, page, millivolt)) {
+			LOG_ERR("The VR MPS29526 vout setting failed");
+			goto err;
+		}
+		break;
 	case sensor_dev_raa228249:
 		if (!raa228249_set_vout_command(cfg, page, millivolt)) {
 			LOG_ERR("The VR RAA228249 vout setting failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_raa229140a:
+		if (!raa229140a_set_vout_command(cfg, page, millivolt)) {
+			LOG_ERR("The VR RAA229140A vout setting failed");
 			goto err;
 		}
 		break;
@@ -1208,9 +1265,21 @@ bool plat_get_get_vout_offset(uint8_t rail, uint16_t *vout_offset)
 			goto err;
 		}
 		break;
+	case sensor_dev_mp29526:
+		if (!mp29526_get_vout_offset(cfg, pre_proc_args->vr_page, vout_offset)) {
+			LOG_ERR("The VR MPS29526 vout setting failed");
+			goto err;
+		}
+		break;
 	case sensor_dev_raa228249:
 		if (!raa228249_get_vout_offset(cfg, vout_offset)) {
 			LOG_ERR("The VR RAA228249 vout setting failed");
+			goto err;
+		}
+		break;
+	case sensor_dev_raa229140a:
+		if (!raa229140a_get_vout_offset(cfg, vout_offset)) {
+			LOG_ERR("The VR RAA229140A vout offset reading failed");
 			goto err;
 		}
 		break;
@@ -1353,6 +1422,150 @@ int get_vr_page(uint8_t rail)
 	const vr_pre_proc_arg *pre_sensor_read_args = cfg->pre_sensor_read_args;
 	CHECK_NULL_ARG_WITH_RETURN(pre_sensor_read_args, -1);
 	return pre_sensor_read_args->vr_page;
+}
+
+int set_vr_mp29526_reg(uint8_t rail, uint16_t *set_value, uint8_t set_reg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(set_value, false);
+
+	int ret = -1;
+	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
+	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+	if (cfg == NULL) {
+		LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);
+		return -1;
+	}
+
+	if (cfg->pre_sensor_read_hook) {
+		if (!cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args)) {
+			LOG_ERR("sensor id: 0x%x pre-read fail", sensor_id);
+			goto err;
+		}
+	}
+
+	vr_pre_proc_arg *pre_proc_args = (vr_pre_proc_arg *)cfg->pre_sensor_read_args;
+
+	switch (set_reg) {
+	case UVP_THRESHOLD:
+		if (!mp29526_set_uvp_threshold(cfg, pre_proc_args->vr_page, set_value)) {
+			LOG_ERR("The VR mp29526 uvp threshold setting failed");
+			goto err;
+		}
+		break;
+	case TOTAL_OCP:
+		if (!mp29526_set_total_ocp(cfg, pre_proc_args->vr_page, set_value)) {
+			LOG_ERR("The VR mp29526 total ocp setting failed");
+			goto err;
+		}
+		break;
+	case OVP_2_ACTION:
+		if (!mp29526_set_ovp_2_action(cfg, pre_proc_args->vr_page, set_value)) {
+			LOG_ERR("The VR mp29526 ovp 2 action setting failed");
+			goto err;
+		}
+		break;
+	case OVP_1:
+		if (!mp29526_set_ovp_1(cfg, pre_proc_args->vr_page, set_value)) {
+			LOG_ERR("The VR mp29526 ovp 1 setting failed");
+			goto err;
+		}
+		break;
+	case VOUT_MAX:
+		if (!mp29526_set_vout_max(cfg, pre_proc_args->vr_page, set_value)) {
+			LOG_ERR("The VR mp29526 vout max setting failed");
+			goto err;
+		}
+		break;
+	default:
+		LOG_ERR("Unsupport VR mp29526 setting reg (0x%x)", set_reg);
+		goto err;
+	}
+	ret = 0;
+err:
+	if (cfg->post_sensor_read_hook) {
+		if (cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args, NULL) == false) {
+			LOG_ERR("sensor id: 0x%x post-read fail", sensor_id);
+		}
+	}
+	return ret;
+}
+
+int get_vr_mp29526_reg(uint8_t rail, uint16_t *get_data, uint8_t get_reg)
+{
+	CHECK_NULL_ARG_WITH_RETURN(get_data, false);
+
+	int ret = -1;
+	uint8_t sensor_id = vr_rail_table[rail].sensor_id;
+	sensor_cfg *cfg = get_sensor_cfg_by_sensor_id(sensor_id);
+	if (cfg == NULL) {
+		LOG_ERR("Failed to get sensor config for sensor 0x%x", sensor_id);
+		return -1;
+	}
+	if (cfg->pre_sensor_read_hook) {
+		if (!cfg->pre_sensor_read_hook(cfg, cfg->pre_sensor_read_args)) {
+			LOG_ERR("sensor id: 0x%x pre-read fail", sensor_id);
+			goto err;
+		}
+	}
+
+	vr_pre_proc_arg *pre_proc_args = (vr_pre_proc_arg *)cfg->pre_sensor_read_args;
+
+	switch (get_reg) {
+	case UVP:
+		if (!mp29526_get_uvp(cfg, pre_proc_args->vr_page, get_data)) {
+			LOG_ERR("The VR mp29526 uvp threshold setting failed");
+			goto err;
+		}
+		break;
+	case VOUT_MAX:
+		if (!mp29526_get_vout_max(cfg, pre_proc_args->vr_page, get_data)) {
+			LOG_ERR("The VR mp29526 vout max setting failed");
+			goto err;
+		}
+		break;
+	case VOUT_COMMAND:
+		if (!mp29526_get_vout_command(cfg, pre_proc_args->vr_page, get_data)) {
+			LOG_ERR("The VR mp29526 vout command reading failed");
+			goto err;
+		}
+		break;
+	case VOUT_OFFSET:
+		if (!mp29526_get_vout_offset(cfg, pre_proc_args->vr_page, get_data)) {
+			LOG_ERR("The VR mp29526 vout offset setting failed");
+			goto err;
+		}
+		break;
+	case TOTAL_OCP:
+		if (!mp29526_get_total_ocp(cfg, pre_proc_args->vr_page, get_data)) {
+			LOG_ERR("The VR mp29526 total ocp setting failed");
+			goto err;
+		}
+		break;
+	case OVP_1:
+		if (!mp29526_get_ovp_1(cfg, pre_proc_args->vr_page, get_data)) {
+			LOG_ERR("The VR mp29526 ovp 1 setting failed");
+			goto err;
+		}
+		break;
+	case OVP_2:
+		if (!mp29526_get_ovp_2(cfg, pre_proc_args->vr_page, get_data)) {
+			LOG_ERR("The VR mp29526 ovp 2 setting failed");
+			goto err;
+		}
+		break;
+	default:
+		LOG_ERR("Unsupport VR mp29526 getting reg (0x%x)", get_reg);
+		goto err;
+	}
+
+	ret = 0;
+err:
+	if (cfg->post_sensor_read_hook) {
+		if (cfg->post_sensor_read_hook(cfg, cfg->post_sensor_read_args, NULL) == false) {
+			LOG_ERR("sensor id: 0x%x post-read fail", sensor_id);
+		}
+	}
+	return ret;
 }
 
 int set_vr_mp29816a_reg(uint8_t rail, uint16_t *set_value, uint8_t set_reg)
@@ -1977,12 +2190,12 @@ bool set_bootstrap_table_val_to_ioexp(void)
 
 bootstrap_user_settings_struct bootstrap_user_settings = { 0 };
 
-bool bootstrap_user_settings_get(void *bootstrap_user_settings)
+bool bootstrap_user_settings_get(void *user_settings)
 {
-	CHECK_NULL_ARG_WITH_RETURN(bootstrap_user_settings, false);
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
 
 	/* read the bootstrap_user_settings from eeprom */
-	if (!plat_eeprom_read(BOOTSTRAP_USER_SETTINGS_OFFSET, bootstrap_user_settings,
+	if (!plat_eeprom_read(BOOTSTRAP_USER_SETTINGS_OFFSET, user_settings,
 			      sizeof(struct bootstrap_user_settings_struct))) {
 		LOG_ERR("Failed to read eeprom when get bootstrap_user_settings");
 		return false;
@@ -1991,12 +2204,12 @@ bool bootstrap_user_settings_get(void *bootstrap_user_settings)
 	return true;
 }
 
-bool bootstrap_user_settings_set(void *bootstrap_user_settings)
+bool bootstrap_user_settings_set(void *user_settings)
 {
-	CHECK_NULL_ARG_WITH_RETURN(bootstrap_user_settings, false);
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
 
 	/* write the bootstrap_user_settings to eeprom */
-	if (!plat_eeprom_write(BOOTSTRAP_USER_SETTINGS_OFFSET, bootstrap_user_settings,
+	if (!plat_eeprom_write(BOOTSTRAP_USER_SETTINGS_OFFSET, user_settings,
 			       sizeof(struct bootstrap_user_settings_struct))) {
 		LOG_ERR("bootstrap Failed to write eeprom");
 		return false;
@@ -2005,12 +2218,12 @@ bool bootstrap_user_settings_set(void *bootstrap_user_settings)
 
 	return true;
 }
-bool temp_threshold_user_settings_get(void *temp_threshold_user_settings)
+bool temp_threshold_user_settings_get(void *user_settings)
 {
-	CHECK_NULL_ARG_WITH_RETURN(temp_threshold_user_settings, false);
+	CHECK_NULL_ARG_WITH_RETURN(user_settings, false);
 
 	/* TODO: read the temp_threshold_user_settings from eeprom */
-	if (!plat_eeprom_read(TEMP_THRESHOLD_USER_SETTINGS_OFFSET, temp_threshold_user_settings,
+	if (!plat_eeprom_read(TEMP_THRESHOLD_USER_SETTINGS_OFFSET, user_settings,
 			      sizeof(struct temp_threshold_user_settings_struct))) {
 		LOG_ERR("Failed to read eeprom when get temp_threshold_user_settings");
 		return false;

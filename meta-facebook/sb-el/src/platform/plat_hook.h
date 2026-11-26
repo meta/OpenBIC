@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -166,12 +166,17 @@ enum PLAT_STRAP_INDEX_E {
 	STRAP_INDEX_PLD_OWL_W_CORE_TAP_CTRL_L,
 	STRAP_INDEX_PLD_OWL_W_PAD_TRI_L,
 	STRAP_INDEX_PLD_OWL_W_ATPG_MODE_L,
-	STRAP_INDEX_OWL_E_JTAG_MUX_PLD_SEL_0_3,
+	STRAP_INDEX_OWL_E_JTAG_MUX_PLD_SEL_00,
+	STRAP_INDEX_OWL_E_JTAG_MUX_PLD_SEL_01,
+	STRAP_INDEX_OWL_E_JTAG_MUX_PLD_SEL_02,
+	STRAP_INDEX_OWL_E_JTAG_MUX_PLD_SEL_03,
 	STRAP_INDEX_OWL_W_JTAG_MUX_PLD_SEL_0_3,
 	STRAP_INDEX_OWL_E_UART_MUX_PLD_SEL_0_2,
 	STRAP_INDEX_OWL_W_UART_MUX_PLD_SEL_0_2,
 	STRAP_INDEX_OWL_E_DVT_ENABLE,
 	STRAP_INDEX_OWL_W_DVT_ENABLE,
+	STRAP_INDEX_NUWA1_STANDALONE_MODE_R,
+	STRAP_INDEX_NUWA0_STANDALONE_MODE_R,
 	STRAP_INDEX_OWL_E_BOOT_SOURCE_0_7,
 	STRAP_INDEX_OWL_W_BOOT_SOURCE_0_7,
 	STRAP_INDEX_EXCEPT_EVB_MAX,
@@ -311,6 +316,8 @@ int get_vr_mp29816a_reg(uint8_t rail, uint16_t *get_data, uint8_t get_reg);
 int set_vr_mp29816a_reg(uint8_t rail, uint16_t *set_value, uint8_t set_reg);
 int get_vr_mp2971_reg(uint8_t rail, uint16_t *get_data, uint8_t get_reg);
 int set_vr_mp2971_reg(uint8_t rail, uint16_t *set_data, uint8_t set_reg);
+int get_vr_mp29526_reg(uint8_t rail, uint16_t *get_data, uint8_t get_reg);
+int set_vr_mp29526_reg(uint8_t rail, uint16_t *set_value, uint8_t set_reg);
 uint8_t get_svs_flag();
 bool set_svs_flag(uint8_t flag, bool is_perm);
 uint8_t get_svs_asic_voltage_flag();
@@ -324,7 +331,7 @@ bool plat_get_alert_level_is_assert(void);
 // Bootstrape
 bool bootstrap_default_settings_init(void);
 bool bootstrap_user_settings_init(void);
-bool temp_threshold_user_settings_get(void *temp_threshold_user_settings);
+bool temp_threshold_user_settings_get(void *user_settings);
 bool set_bootstrap_table_and_user_settings(uint8_t rail, uint8_t *change_setting_value,
 					   uint8_t drive_index_level, bool is_perm,
 					   bool is_default);
@@ -332,7 +339,7 @@ bool strap_name_get(uint8_t rail, uint8_t **name);
 bool strap_enum_get(uint8_t *name, uint8_t *num);
 bool get_bootstrap_change_drive_level(int rail, int *drive_level);
 bool find_bootstrap_by_rail(uint8_t rail, bootstrap_mapping_register *result);
-bool bootstrap_user_settings_set(void *bootstrap_user_settings);
+bool bootstrap_user_settings_set(void *user_settings);
 bool set_bootstrap_table_val_to_ioexp(void);
 bool set_ioexp_val_to_bootstrap_table(void);
 bool set_bootstrap_val_to_device(uint8_t strap, uint8_t val);
